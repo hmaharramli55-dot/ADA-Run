@@ -36,7 +36,7 @@ Open the link above, or open `index.html` in any modern browser on a computer or
 
   Quizzes never show raw course codes.
 - **Score and learning.** The HUD shows your score and how many topics you have learned (each right answer is one). Every run ends with a list of what you learned, and your profile keeps the total.
-- **Leaderboard and live race.** The game has an "All ADA" leaderboard, and classmates playing at the same time appear as see-through runners with a live ranking. These online features work on the game's claude.ai link. On this GitHub Pages version, scores are kept on your device.
+- **See other players and their scores.** Students playing at the same time appear on your track as see-through runners with their name and live score above their head, and a "Live race" box ranks everyone in the race. The start screen shows the top 3 students and your rank, the "All ADA" leaderboard lists everyone's best score, and every run ends with your ADA rank. Student IDs are never published.
 - **Share.** The Share and Challenge friends buttons copy an invite message with the game link.
 - **Real ADA campus.** The 3D world is built from photos and the real names of ADA buildings: Buildings A, B, D, E and L, the Library, the Student Center, the Caravanserai (School of Business), ADA Gardens and ADA School.
 - **Academic obstacles.** The track has these obstacles:
@@ -49,11 +49,22 @@ Open the link above, or open `index.html` in any modern browser on a computer or
 - **Scoring.** One mode for everyone: 0.10 points per book, combos (x2, x3, x5) and pomegranate books worth 1.00. Power-ups include a hoverboard, jetpack, coffee magnet, focus mode and super-jump shoes. You get a transcript with GPA and, at 100 points, a diploma.
 - **Look.** Caspian Blue, White and Pomegranate visual identity.
 
+## Online play
+
+The game connects players through a [Firebase Realtime Database](https://firebase.google.com/docs/database). Put the database URL in `FIREBASE_DB` near the top of the script in `index.html`:
+
+```js
+const FIREBASE_DB = 'https://ada-run-xxxxx-default-rtdb.europe-west1.firebasedatabase.app';
+```
+
+With the URL empty, the GitHub Pages version keeps scores on each device, and online play works on the game's claude.ai link instead.
+
 ## Built with
 
 - HTML5, CSS and JavaScript in a single file
 - [Three.js](https://threejs.org/) r128 (WebGL), loaded from a CDN
 - Web Audio API for sound effects and music
+- Firebase Realtime Database (REST and live streaming) for online play
 
 ## Author
 

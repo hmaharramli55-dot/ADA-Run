@@ -295,6 +295,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
 .learned div:first-of-type{border-top:0}
 .learned b{color:var(--pass)}
 .lb-row .st{font-size:.7rem;font-weight:800;padding:.1em .5em;border-radius:999px;background:rgba(76,217,100,.2);color:#9ff0ae;margin-left:6px}
+.chip-info.tap{cursor:pointer;pointer-events:auto}
+.chip-info.tap:hover{filter:brightness(1.15)}
 .share-msg{margin:0;font-weight:600;line-height:1.4}
 .share-row{display:flex;gap:8px}
 .share-row input{flex:1;min-width:0;font:inherit;font-size:.85rem;padding:.6em .7em;border-radius:12px;border:2px solid #d1dde5;color:var(--navy);background:#fff;-webkit-user-select:text;user-select:text}
@@ -677,6 +679,48 @@ function runCourses(m, y) {
 }
 
 // ---------- v6: scores storage: this device always, plus the shared ADA leaderboard when the page can reach it ----------
+// ---------- v6.3: shared online database for the public link (Firebase Realtime Database, REST + live stream) ----------
+// set FIREBASE_DB to the database URL to put every player on one leaderboard and one live race
+const FIREBASE_DB = '';
+const FB = {
+  url: String(FIREBASE_DB || '').replace(/\/+$/, ''), ok: false,
+  async init() {
+    if (!this.url || !/^https:\/\//.test(this.url) && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(this.url)) return false;
+    try {
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 7000);
+      const r = await fetch(this.url + '/.json?shallow=true', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+      this.ok = r.ok; return r.ok;
+    } catch (e) { return false; }
+  },
+  req(path, method, body, keepalive) { return fetch(this.url + path + '.json', { method, body: body === undefined ? undefined : JSON.stringify(body), keepalive: !!keepalive, headers: body === undefined ? undefined : { 'Content-Type': 'application/json' } }).then(r => r.ok ? r.json() : Promise.reject(new Error('http ' + r.status))); },
+  get(path) { return this.req(path, 'GET'); },
+  put(path, v, keep) { return this.req(path, 'PUT', v, keep); },
+  patch(path, v) { return this.req(path, 'PATCH', v); },
+  del(path, keep) { return this.req(path, 'DELETE', undefined, keep); },
+  // keep a live copy of one branch of the database; calls onMap with the whole branch after every change
+  stream(path, onMap, onErr) {
+    let map = {};
+    const setAt = (p, data) => {
+      const seg = p.split('/').filter(Boolean);
+      if (!seg.length) { map = data && typeof data === 'object' ? data : {}; return; }
+      let o = map; for (let i = 0; i < seg.length - 1; i++) { if (!o[seg[i]] || typeof o[seg[i]] !== 'object') o[seg[i]] = {}; o = o[seg[i]]; }
+      const k = seg[seg.length - 1]; if (data === null) delete o[k]; else o[k] = data;
+    };
+    const es = new EventSource(this.url + path + '.json');
+    const on = kind => e => { try { const m = JSON.parse(e.data); if (!m) return; if (kind === 'put') setAt(m.path, m.data); else for (const k in (m.data || {})) setAt(m.path.replace(/\/$/, '') + '/' + k, m.data[k]); onMap(map); } catch (err) {} };
+    es.addEventListener('put', on('put')); es.addEventListener('patch', on('patch'));
+    es.addEventListener('cancel', () => onErr && onErr('cancel'));
+    es.onerror = () => { if (es.readyState === 2 && onErr) onErr('closed'); };
+    return () => es.close();
+  },
+};
+// an anonymous id for this player on the shared database (never the student ID)
+const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(10)), b => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
+// one id per browser for the live race (a tab shows one runner at a time)
+function devId() { if (!save.anon) { save.anon = rid(); persist(); } return save.anon; }
+function myPid() { const p = activeProfile(); if (p) { if (!p.pid) { p.pid = rid(); persist(); } return p.pid; } if (!save.anon) { save.anon = rid(); persist(); } return save.anon; }
+const cleanRow = (id, r) => r && typeof r === 'object' ? { id, name: String(r.name || '').slice(0, 28), major: String(r.major || '').slice(0, 60), year: Math.max(0, Math.min(4, Math.round(+r.year || 0))), score: Math.max(0, Math.min(1e8, Math.round(+r.score || 0))), dist: Math.max(0, Math.round(+r.dist || 0)), learned: Math.max(0, Math.round(+r.learned || 0)), at: +r.at || 0 } : null;
+
 const Store = {
   db: null, uid: null, mode: 'local', listeners: [], rows: null, err: null, unsub: null,
   init() {
@@ -686,16 +730,27 @@ const Store = {
       if (!db) return;
       this.db = db;
       try { this.uid = user ? await user.id() : null; } catch (e) { this.uid = null; }
-      this.mode = 'global'; this.emit();
+      this.mode = 'global'; this.watch(); this.emit();
     }).catch(() => {});
   },
+  useFirebase() { this.fb = true; this.mode = 'global'; this.emit(); },
+  myId() { return this.fb ? myPid() : this.uid; },
   watch() {
-    if (!this.db || this.unsub) return;
+    if (this.unsub) return;
+    if (this.fb) {
+      this.unsub = FB.stream('/scores', map => { this.rows = Object.entries(map).map(([id, r]) => cleanRow(id, r)).filter(r => r && r.score > 0).sort((a, b) => b.score - a.score).slice(0, 100); this.err = null; this.emit(); }, e => { this.err = e; this.emit(); });
+      return;
+    }
+    if (!this.db) return;
     this.unsub = this.db.collection('scores').orderBy('score', 'desc').limit(100).onSnapshot(
       snap => { this.rows = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); this.err = null; this.emit(); },
       e => { this.err = (e && e.code) || 'error'; this.emit(); });
   },
   async submit(entry) {
+    if (this.fb) {
+      try { const id = myPid(), cur = await FB.get('/scores/' + id); if (cur && (+cur.score || 0) >= entry.score) return true; await FB.put('/scores/' + id, entry); return true; }
+      catch (e) { this.err = 'error'; return false; }
+    }
     if (!this.db || !this.uid) return false;
     try {
       const ref = this.db.doc('scores/' + this.uid), cur = await ref.get();
@@ -706,7 +761,8 @@ const Store = {
   },
   emit() { this.listeners.forEach(f => f()); },
 };
-Store.init();
+// one backend for everyone: the shared Firebase database when it is set up and reachable, otherwise the claude.ai page's own storage
+FB.init().then(ok => { if (ok) { Store.useFirebase(); Live.useFirebase(); } else { Store.init(); Live.init(); } Store.watch(); });
 const shortMajor = m => m.en.replace(/^(Bachelor|Master) of (Science|Arts|Business Administration|Public Administration|Laws|Architecture)( in )?/, (all, lvl, what, inn) => inn ? '' : (lvl === 'Master' ? 'Master of ' : 'Bachelor of ') + what).replace(/^Bachelor in /, '') || m.en;
 
 // v6.1: one mode for everyone (0.10 per book, combos up to x5, pomegranate book 1.00), so all scores compare fairly
@@ -2737,7 +2793,7 @@ function nearMiss(ob, sliding) {
 function die(reason, label) {
   if (run.over) return;
   run.over = true; run.dying = 0.001; run.cause = { reason, label };
-  hideGate(true); gate = null;
+  hideGate(true); gate = null; if (quiz) { quiz.done = true; quiz = null; }
   state = 'dying'; SFX.fail(); sirenOn(false); musicOn(false); shake = 0.8;
 }
 function win() {
@@ -2940,6 +2996,7 @@ function makeQuestion(ci) {
   return { tag, q: q[0], right: q[1], wrong: [q[2], q[3]] };
 }
 function startQuiz(ci) {
+  if (state !== 'play' || run.over) return;
   const Q = makeQuestion(ci); if (!Q) return;
   run.lastQuizT = run.t; run.quizzes++;
   // two formats: multiple choice, or a quick true/false on a proposed answer
@@ -2971,7 +3028,7 @@ function answerQuiz(i) {
   run.courseQuiz[quiz.ci] = ok ? 1 : -1;
   if (ok) { run.quizRight++; learn(quiz.Q, quiz.tf ? quiz.Q.trueAns : quiz.Q.right); run.cents = Math.min(10000, run.cents + 500); SFX.win(); } else SFX.hit();
   setTimeout(() => {
-    if (state !== 'quiz') return;
+    if (state !== 'quiz' || run.over) return;
     state = 'play'; show(null); $('#hud').hidden = false; quiz = null;
     run.grace = 1.2; run.chaseT = 0; musicOn(true);
     if (ok) { toast('Correct! +5.00 points', 'good'); popup(tmp2.copy(player.position).setY(player.position.y + 2.8), '+5.00', 'big', true); coursePassed(before, true); }
@@ -3270,6 +3327,12 @@ function resumeGame() { if (state !== 'paused') return; state = 'play'; show(nul
 const statRows = rows => rows.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
 const fmtTime = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 // run score for the leaderboard: the same for every mode (distance, books and right answers, plus a bonus for graduating)
+// where this player's best score sits on the shared leaderboard
+function rankRow() {
+  if (Store.mode !== 'global' || !Store.rows || !run.recorded) return [];
+  const me = Store.myId(), best = run.recorded.bestScore, others = Store.rows.filter(r => r.id !== me);
+  return [['ADA rank', `#${others.filter(r => r.score > best).length + 1} of ${others.length + 1}`]];
+}
 function runScore(won) { return Math.round(run.dist) + run.books * 5 + run.quizRight * 250 + (won ? 2500 : 0); }
 function recordBest(won) {
   if (run.recorded) return run.recorded.isBest;
@@ -3312,7 +3375,7 @@ function showOver() {
   $('#overGpa').innerHTML = `<b>${tr.gpa.toFixed(2)}</b><div>GPA<small>${ci} of ${N} courses passed</small></div>`;
   $('#overTranscript').innerHTML = tr.rows;
   $('#overLearned').innerHTML = learnedHtml();
-  $('#overStats').innerHTML = statRows([['Points', (run.cents / 100).toFixed(2) + ' / 100'], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Distance', Math.round(run.dist).toLocaleString('en') + ' m'], ['Learned', `${run.learned.length} this run · ${(activeProfile() && activeProfile().learned) || run.learned.length} total`], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], [isBest ? 'New best!' : 'Best points', ((save.best[run.mode] || 0) / 100).toFixed(2)]]);
+  $('#overStats').innerHTML = statRows([['Points', (run.cents / 100).toFixed(2) + ' / 100'], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Distance', Math.round(run.dist).toLocaleString('en') + ' m'], ['Learned', `${run.learned.length} this run · ${(activeProfile() && activeProfile().learned) || run.learned.length} total`], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], ...rankRow(), [isBest ? 'New best!' : 'Best points', ((save.best[run.mode] || 0) / 100).toFixed(2)]]);
   show('over');
   setTimeout(() => { const el = $('#overTranscript .bad'), box = $('#overTranscript'); if (el) box.scrollTop = el.offsetTop - box.clientHeight / 2; }, 60);
 }
@@ -3326,10 +3389,23 @@ function showWon() {
   $('#wonGpa').innerHTML = `<b>${tr.gpa.toFixed(2)}</b><div>GPA<small>All ${run.courses.length} courses passed${tr.gpa >= 3.5 ? ' · with honors' : ''}</small></div>`;
   $('#wonTranscript').innerHTML = tr.rows;
   $('#wonLearned').innerHTML = learnedHtml();
-  $('#wonStats').innerHTML = statRows([['Learned', `${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}`], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Time', fmtTime(performance.now() - run.startTime)], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], ['Hits', run.stumbles]]);
+  $('#wonStats').innerHTML = statRows([['Learned', `${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}`], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Time', fmtTime(performance.now() - run.startTime)], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], ...rankRow(), ['Hits', run.stumbles]]);
   show('won');
 }
 const initials = n => (String(n).trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 2) || '?').toUpperCase();
+// the start screen shows the top of the shared leaderboard; tap it to open the full board
+function renderTop() {
+  const el = $('#titleInfo');
+  if (Store.mode === 'global' && Store.rows && Store.rows.length) {
+    const me = Store.myId(), mi = Store.rows.findIndex(r => r.id === me);
+    el.innerHTML = `🏆 ${Store.rows.slice(0, 3).map((r, i) => `<b>${i + 1}. ${escapeHtml(r.name.split(' ')[0] || 'Student')}</b> ${r.score.toLocaleString('en')}`).join(' · ')}${mi > 2 ? ` · <b>You #${mi + 1}</b>` : ''}`;
+    el.classList.add('tap'); el.onclick = openBoard;
+  } else {
+    el.innerHTML = save.best[save.mode] ? `Best ${(save.best[save.mode] / 100).toFixed(2)} / 100 points` : '0.10 points per book · 100 points to graduate';
+    el.classList.remove('tap'); el.onclick = null;
+  }
+}
+Store.listeners.push(() => { if (screen === 'title') renderTop(); });
 function refreshTitle() {
   const m = MAJORS[save.major], p = activeProfile(), chip = $('#profileChip');
   if (p) {
@@ -3339,7 +3415,7 @@ function refreshTitle() {
     chip.innerHTML = `<div class="av">?</div><div class="who"><b>Not signed in</b><small>Sign in to save your progress and join the leaderboard</small></div><button id="switchBtn">Sign in</button>`;
     $('#switchBtn').onclick = () => openLogin();
   }
-  $('#titleInfo').innerHTML = save.best[save.mode] ? `Best ${(save.best[save.mode] / 100).toFixed(2)} / 100 points` : '0.10 points per book · 100 points to graduate';
+  renderTop();
   $('#howto').innerHTML = isTouch
     ? '<b>Swipe</b> left/right: change lane · <b>up</b>: jump · <b>down</b>: slide · <b>double-tap</b>: hoverboard'
     : '<b>← →</b> change lane · <b>↑ / Space</b>: jump · <b>↓ / Shift</b>: slide · <b>E</b>: hoverboard · <b>P</b>: pause';
@@ -3411,28 +3487,61 @@ function livePresence() {
 }
 function livePeerSelf() { const o = livePresence(); return peerInfo({ peer: 'me', presence: o }); }
 const Live = {
-  room: null, peers: [], sendT: 0, uiT: 0, ghosts: new Map(),
+  room: null, fb: false, on: false, peers: [], sendT: 0, nextSend: 0, uiT: 0, fullT: 0, ghosts: new Map(), seen: {}, lastT: {}, map: {}, lastSt: '',
+  // Firebase: everyone writes their own /live/<id> about once a second; entries that stop updating drop out
+  useFirebase() {
+    this.fb = true; this.on = true;
+    FB.stream('/live', map => {
+      const now = Date.now(), me = devId(), first = !this.loaded; this.loaded = true;
+      for (const id in map) {
+        const v = map[id]; if (!v || typeof v !== 'object' || id === me) continue;
+        // the stream hands over the same object each time, so remember each player's last timestamp separately
+        if (this.lastT[id] !== v.t) { this.lastT[id] = v.t; this.seen[id] = first ? (Math.abs(now - (+v.t || 0)) < 20000 ? now : 0) : now; }
+      }
+      this.map = map; this.refresh();
+      // tidy entries left behind by closed tabs (over an hour old)
+      if (first) Object.entries(map).filter(([id, v]) => !v || now - (+v.t || 0) > 3600e3).slice(0, 20).forEach(([id]) => FB.del('/live/' + id).catch(() => {}));
+    }, () => {});
+    addEventListener('pagehide', () => { FB.del('/live/' + devId(), true).catch(() => {}); });
+    this.push(true); renderOnline();
+  },
+  refresh() {
+    const now = Date.now(), me = devId();
+    const peers = Object.entries(this.map).filter(([id, v]) => id !== me && v && typeof v === 'object' && now - (this.seen[id] || 0) < 12000).map(([id, v]) => ({ peer: id, by: null, isMe: false, sameTab: false, kind: 'viewer', guest: false, presence: v, updatedAt: this.seen[id] }));
+    const key = peers.map(p => p.peer + ':' + p.presence.st + ':' + p.presence.sc).join('|');
+    this.peers = peers;
+    if (key !== this.peerKey) { this.peerKey = key; renderOnline(); if (screen === 'board' && lbTab === 'live') renderBoard(); }
+  },
   init() {
     const cl = window.claude;
     if (!cl || typeof cl.use !== 'function') return;
     cl.use('room').then(room => {
       if (!room) return;
-      this.room = room;
-      room.onPeers(ch => { this.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer'); renderOnline(); if (screen === 'board' && lbTab === 'live') renderBoard(); }, () => { this.room = null; this.peers = []; renderOnline(); });
+      this.room = room; this.on = true;
+      room.onPeers(ch => { this.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer'); renderOnline(); if (screen === 'board' && lbTab === 'live') renderBoard(); }, () => { this.room = null; this.on = false; this.peers = []; renderOnline(); });
       this.push(); renderOnline();
     }).catch(() => {});
   },
-  push() { if (this.room) this.room.presence(livePresence()).catch(() => {}); },
+  push(full) {
+    if (this.room) { this.room.presence(livePresence()).catch(() => {}); return; }
+    if (!this.fb) return;
+    const o = livePresence(); o.t = Date.now();
+    // the full record now and then (or when the state changes), only the moving fields in between
+    if (full || o.st !== this.lastSt || o.n !== this.lastN || Date.now() - this.fullT > 10000) { this.fullT = Date.now(); this.lastSt = o.st; this.lastN = o.n; FB.put('/live/' + devId(), o).catch(() => {}); }
+    else FB.patch('/live/' + devId(), { st: o.st, d: o.d, sc: o.sc, le: o.le, ln: o.ln, y: o.y, sl: o.sl, t: o.t }).catch(() => {});
+  },
   tick(dt) {
-    if (!this.room) return;
-    this.sendT -= dt; if (this.sendT <= 0) { this.sendT = state === 'play' ? 0.15 : 1; this.push(); }
+    if (!this.on) return;
+    // paced by the wall clock, so slow devices still report on time
+    const nowMs = performance.now();
+    if (nowMs >= this.nextSend) { this.nextSend = nowMs + 1000 * (this.room ? (state === 'play' ? 0.15 : 1) : (state === 'play' ? 0.8 : 5)); this.push(); if (this.fb) this.refresh(); }
     this.uiT -= dt; if (this.uiT <= 0) { this.uiT = 0.3; renderLiveHud(); }
     updateGhosts(dt);
   },
 };
 function renderOnline() {
   const el = $('#onlineChip');
-  if (!Live.room) { el.hidden = true; return; }
+  if (!Live.on) { el.hidden = true; return; }
   const all = Live.peers.map(peerInfo), running = all.filter(x => x.st === 'run').length;
   el.hidden = false;
   el.innerHTML = all.length ? `<span class="dot"></span><b>${all.length + 1} students online</b>${running ? ` · ${running} running now` : ''} · ${all.slice(0, 3).map(x => escapeHtml(x.name.split(' ')[0])).join(', ')}${all.length > 3 ? '…' : ''}`
@@ -3468,13 +3577,15 @@ function updateGhosts(dt) {
         const obj = buildCharacter(x.look), mats = new Map();
         obj.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material)) { if (!mats.has(o.material)) { const m = o.material.clone(); m.transparent = true; m.opacity = 0.5; m.depthWrite = false; mats.set(o.material, m); } o.material = mats.get(o.material); } });
         const U = obj.userData; U.shadow.visible = false; U.board.visible = false; U.jet.visible = false;
-        const tex = labelTex(x.name, '#2681ba', '#ffffff'), tag = sprite(tex, 1.9, 0.48); tag.position.y = 2.75; obj.add(tag);
+        const tex = labelTex(x.name, '#2681ba', '#ffffff', `${x.sc.toLocaleString('en')} pts`), tag = sprite(tex, 1.9, 0.6); tag.position.y = 2.8; obj.add(tag);
         scene.add(obj);
-        g = { obj, mats: [...mats.values()], tex, tag, lookKey, d: x.d, vd: 0, lastD: x.d, lastT: performance.now(), lat: x.ln * LANE };
+        g = { obj, mats: [...mats.values()], tex, tag, lookKey, d: x.d, vd: 0, lastD: x.d, lastT: performance.now(), lat: x.ln * LANE, tagSc: x.sc, tagT: performance.now() };
         G.set(x.id, g);
       }
       // smooth the 6-7 updates a second into motion: estimate speed from successive distances
       const now = performance.now();
+      // keep the score on their name tag current (redrawn at most once a second)
+      if (x.sc !== g.tagSc && now - g.tagT > 1000) { g.tex.dispose(); g.tex = labelTex(x.name, '#2681ba', '#ffffff', `${x.sc.toLocaleString('en')} pts`); g.tag.material.map = g.tex; g.tag.material.needsUpdate = true; g.tagSc = x.sc; g.tagT = now; }
       if (x.d !== g.lastD) { const v = (x.d - g.lastD) / Math.max(0.05, (now - g.lastT) / 1000); g.vd = g.vd ? g.vd * 0.6 + v * 0.4 : v; g.lastD = x.d; g.lastT = now; }
       const est = g.lastD + clamp(g.vd, 0, 60) * Math.min(0.6, (now - g.lastT) / 1000);
       g.d = damp(g.d, est, 8, dt); g.lat = damp(g.lat, x.ln * LANE, 12, dt);
@@ -3556,18 +3667,18 @@ function renderBoard() {
   const me = activeProfile(), list = $('#lbList'), st = $('#lbStatus');
   let rows, mine = null;
   if (lbTab === 'live') {
-    if (!Live.room) { st.textContent = 'Live play works when the game is opened from its claude.ai link while signed in.'; list.innerHTML = '<div class="lb-empty">Nobody to race here yet.</div>'; return; }
+    if (!Live.on) { st.textContent = 'Live play needs the shared online database. Your scores are still saved on this device.'; list.innerHTML = '<div class="lb-empty">Nobody to race here yet.</div>'; return; }
     const all = [livePeerSelf(), ...Live.peers.map(peerInfo)];
     st.textContent = `${all.length} ${all.length === 1 ? 'student' : 'students'} online now · start a run and you race everyone who is running`;
     rows = all.map(x => ({ name: x.name, major: x.mj, year: x.yr, score: x.sc, id: x.id, live: x.st === 'run' ? `running · ${x.d.toLocaleString('en')} m · 🧠 ${x.le}` : x.st === 'out' ? 'caught by the F' : x.st === 'won' ? 'graduated! 🎓' : 'in the menu' }));
     rows.sort((a, b) => b.score - a.score); mine = 'me';
   } else if (lbTab === 'all' && Store.mode === 'global') {
-    st.textContent = Store.err ? 'The shared leaderboard could not be reached right now. Your scores are still saved on this device.' : 'Everyone who plays this game link · best score per player · updates live';
+    st.textContent = Store.err ? 'The shared leaderboard could not be reached right now. Your scores are still saved on this device.' : 'Every ADA Run player · best score per player · updates live';
     rows = (Store.rows || []).map(r => ({ name: r.name, major: r.major, year: r.year, score: r.score, dist: r.dist, learned: r.learned, id: r.id }));
-    mine = Store.uid;
+    mine = Store.myId();
     if (!Store.rows && !Store.err) { list.innerHTML = '<div class="lb-empty">Loading the ADA leaderboard…</div>'; return; }
   } else {
-    if (lbTab === 'all') st.textContent = 'The shared leaderboard works when the game is opened from its claude.ai link. Showing this device for now.';
+    if (lbTab === 'all') st.textContent = 'The shared leaderboard is not connected on this copy of the game. Showing this device for now.';
     else st.textContent = 'Students who signed in on this device';
     rows = Object.values(save.profiles).filter(p => p.bestScore > 0).map(p => ({ name: p.name, major: shortMajor(MAJORS[p.major] || MAJORS[0]), year: p.year, score: p.bestScore, dist: p.bestDist, learned: p.learned, id: profKey(p.sid) }));
     rows.sort((a, b) => b.score - a.score); mine = save.active;
@@ -3643,7 +3754,6 @@ P = menuP();
 resize();
 show('title'); refreshTitle(); drawLogoMark();
 if (!activeProfile()) openLogin();
-Live.init();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLogoMark);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 window.__ada = { get state() { return state; }, get run() { return run; }, get P() { return P; }, act, startGame, segs: () => segs, addSegment, activatePower, unfair: () => unfairRows, setCfg: (o, g) => { cfg = g ? Object.assign({}, DEF[g], o || {}) : Object.assign({}, cfg, o); rebuildPlayer(); }, spin: a => { menuYaw = a; }, spawnGate: () => spawnGate(), gate: () => gate, store: Store, live: Live, openBoard, openLogin, startQuiz: ci => startQuiz(ci), cam: () => [camera.position.x, camera.position.y, camera.position.z, camLook.x, camLook.y, camLook.z, player.position.x, player.position.z].map(v => +v.toFixed(1)) };
