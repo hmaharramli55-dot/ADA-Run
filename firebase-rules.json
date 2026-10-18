@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "scores": { ".read": "auth != null", "$uid": { ".write": "auth != null && auth.uid === $uid", ".validate": "newData.child('score').isNumber() && newData.child('name').isString() && newData.child('name').val().length <= 28" } },
+    "live": { ".read": "auth != null", "$uid": { ".write": "auth != null && auth.uid === $uid" } },
+    "users": { "$uid": { ".read": "auth != null && auth.uid === $uid", ".write": "auth != null && auth.uid === $uid" } }
+  }
+}
