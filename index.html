@@ -59,7 +59,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
   display:inline-block;padding:.4em .9em;border-radius:10px;transform:rotate(-2deg);box-shadow:0 4px 0 rgba(15,50,72,.35)}
 .tagline em{font-style:normal;color:var(--fail)}
 .title-bottom{display:flex;flex-direction:column;gap:12px;align-items:center;width:min(420px,100%)}
-.title-bottom .row{display:flex;gap:10px;width:100%}
+.title-bottom .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 .title-bottom .row .btn{flex:1}
 .title-bottom .btn.primary{width:100%;font-size:1.3rem;padding:.9em;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
@@ -193,6 +193,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
 .transcript div{display:grid;grid-template-columns:22px 82px 1fr 34px;gap:6px;padding:6px 10px;border-bottom:1px solid #f8fafb;align-items:center}
 .transcript div:last-child{border-bottom:0}
 .transcript .code{font-weight:800;font-variant-numeric:tabular-nums}
+.transcript .code{font-size:.7rem}
 .transcript .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#4a4436}
 .transcript .g{font-family:var(--display);font-weight:900;text-align:right}
 .transcript .ok .g{color:var(--pass)} .transcript .bad{background:#f7c6ce} .transcript .bad .g{color:var(--fail)} .transcript .todo{opacity:.45}
@@ -228,6 +229,77 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
 .quiz .timer{height:6px;border-radius:4px;background:#f3f6f8;overflow:hidden}
 .quiz .timer u{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--fail));text-decoration:none;width:100%}
 .quiz .reward{font-size:.85rem;color:#6b6250;margin:0}
+/* v6: student profile, sign-in, leaderboard, quiz gates */
+.profile{display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:8px 10px;width:100%;box-sizing:border-box;text-align:left}
+.profile .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#e16076,#c52540);font-family:var(--display);font-weight:900;color:#fff;flex:none}
+.profile .who{flex:1;min-width:0}
+.profile .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile .who small{display:block;color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile button{font-size:.78rem;font-weight:800;padding:.45em .7em;border-radius:10px;background:rgba(255,255,255,.12);flex:none}
+#login,#board{background:linear-gradient(180deg,rgba(15,51,74,.95),rgba(10,34,44,.98));align-items:center;overflow-y:auto}
+.lg-card{width:min(460px,100%);display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.lg-card h2{font-family:var(--display);margin:0;font-size:clamp(1.2rem,4vw,1.6rem)}
+.lg-card label{display:flex;flex-direction:column;gap:6px}
+.lg-card select.name-in{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.08) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:32px}
+.lg-card select option,.lg-card select optgroup{color:#10364e;background:#fff}
+.lg-card .opts{margin-top:6px}
+.lg-note{margin:0;color:var(--muted);font-size:.85rem;line-height:1.45}
+.lg-err{margin:0;background:rgba(215,43,72,.2);border:1px solid var(--fail);border-radius:10px;padding:.5em .8em;font-size:.85rem}
+.lg-actions{display:flex;gap:10px}.lg-actions .btn.primary{flex:1}
+.lg-saved{display:flex;flex-direction:column;gap:6px}
+.lg-saved:empty{display:none}
+.lg-saved button{display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.07);border:2px solid transparent;border-radius:12px;padding:.5em .7em}
+.lg-saved button[aria-pressed="true"]{border-color:var(--gold)}
+.lg-saved .av{width:30px;height:30px;font-size:.8rem;border-radius:50%;display:grid;place-items:center;background:var(--navy-3);font-weight:900;flex:none}
+.lg-saved small{display:block;color:var(--muted);font-size:.74rem}
+.lb-status{margin:0;font-size:.82rem;color:var(--muted);background:rgba(255,255,255,.05);border-radius:10px;padding:.5em .8em}
+.lb-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;touch-action:pan-y}
+.lb-row{display:grid;grid-template-columns:2.2em 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.06);border-radius:12px;padding:.55em .8em;border:2px solid transparent}
+.lb-row.me{border-color:var(--gold);background:rgba(219,68,94,.13)}
+.lb-row .rk{font-family:var(--display);font-weight:900;color:var(--gold-2);text-align:center}
+.lb-row:nth-child(1) .rk{color:#ffd166}.lb-row:nth-child(2) .rk{color:#e6ecf1}.lb-row:nth-child(3) .rk{color:#e8a27c}
+.lb-row .nm{min-width:0}.lb-row .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-row .nm small{display:block;color:var(--muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-row .sc{font-family:var(--display);font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
+.lb-row .sc small{display:block;font-family:var(--ui);font-weight:500;color:var(--muted);font-size:.7rem}
+.lb-empty{color:var(--muted);text-align:center;padding:2em 1em}
+#mjYearNote{text-transform:none;letter-spacing:0;font-weight:500}
+#gateQ{position:absolute;left:50%;top:max(136px,calc(env(safe-area-inset-top,0px) + 126px));transform:translateX(-50%);width:min(92vw,560px);background:#fff;color:var(--navy);border-radius:16px;padding:10px 14px;
+  box-shadow:0 5px 0 rgba(15,50,72,.35),0 12px 24px rgba(0,0,0,.25);text-align:center;animation:toastIn2 .35s cubic-bezier(.2,1.4,.4,1)}
+#gateQ .eyebrow{color:var(--fail)}
+#gateQ p{margin:.25em 0;font-family:var(--display);font-size:clamp(.85rem,2.6vw,1.02rem);line-height:1.3}
+.gate-hint{font-size:.75rem;color:#4a6478;font-weight:700}
+.gopts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:.35em 0}
+.gopts span{display:flex;align-items:center;gap:6px;text-align:left;font-size:.78rem;line-height:1.2;color:var(--navy);background:#f3f6f8;border:2px solid var(--c);border-radius:10px;padding:.35em .45em;min-width:0}
+.gopts b{flex:none;width:1.5em;height:1.5em;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font-size:.72rem}
+#gateQ.ok{background:#daedf9}#gateQ.bad{background:#f6c3cc}
+@keyframes toastIn2{from{opacity:0;transform:translate(-50%,10px) scale(.85)}to{opacity:1;transform:translateX(-50%)}}
+.quiz .q .tf{display:block;margin-top:.5em;font-family:var(--ui);font-size:1rem;background:#eef4f8;border-radius:10px;padding:.5em .7em}
+@media (max-width:520px){ #fwarn{top:calc(max(16px,env(safe-area-inset-top,0px)) + 128px)} #gateQ{top:calc(max(16px,env(safe-area-inset-top,0px)) + 164px)} .title-bottom .row{flex-wrap:wrap} .title-bottom .row .btn{min-width:calc(50% - 5px);padding:.75em .6em} }
+/* v6.1: live score, learning count, online race */
+.sline{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;margin-top:4px;font-size:.74rem;color:var(--muted);white-space:nowrap}
+.sline b{color:#fff;font-variant-numeric:tabular-nums}
+.online{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:.8rem;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:.35em .8em}
+.online .dot{width:9px;height:9px;border-radius:50%;background:#4cd964;box-shadow:0 0 0 3px rgba(76,217,100,.25);animation:blink2 1s infinite alternate}
+#live{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:40%;width:min(168px,42vw);background:rgba(12,42,60,.7);border:1px solid var(--line);border-radius:14px;padding:7px 9px;font-size:.74rem;pointer-events:none}
+#live .eyebrow{font-size:.6rem;margin-bottom:3px;display:flex;justify-content:space-between}
+#live .r{display:flex;gap:6px;align-items:center;padding:2px 0;white-space:nowrap}
+#live .r i{font-style:normal;font-family:var(--display);font-weight:900;width:1.3em;color:var(--gold-2)}
+#live .r span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#live .r b{font-variant-numeric:tabular-nums}
+#live .r.me{color:#ffd166}
+.learned{background:#eef4f8;border-radius:12px;padding:8px 10px;font-size:.82rem;color:var(--navy);max-height:130px;overflow-y:auto}
+.learned:empty{display:none}
+.learned h4{margin:0 0 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#6b6250}
+.learned div{padding:3px 0;border-top:1px solid #dfe8ee;line-height:1.3}
+.learned div:first-of-type{border-top:0}
+.learned b{color:var(--pass)}
+.lb-row .st{font-size:.7rem;font-weight:800;padding:.1em .5em;border-radius:999px;background:rgba(76,217,100,.2);color:#9ff0ae;margin-left:6px}
+.share-msg{margin:0;font-weight:600;line-height:1.4}
+.share-row{display:flex;gap:8px}
+.share-row input{flex:1;min-width:0;font:inherit;font-size:.85rem;padding:.6em .7em;border-radius:12px;border:2px solid #d1dde5;color:var(--navy);background:#fff;-webkit-user-select:text;user-select:text}
+.share-row .btn{padding:.6em 1em}
+.share-note{margin:0;font-size:.8rem;color:#6b6250;line-height:1.4}
 @media (prefers-reduced-motion:reduce){ #turnHint,.title-bottom .btn.primary,#fwarn{animation:none} .toast{animation-duration:2.4s} }
 </style>
 </head><body>
@@ -246,13 +318,51 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     <p class="tagline">Run, study, escape the <em>F</em>!</p>
   </div>
   <div class="title-bottom">
+    <div class="online" id="onlineChip" hidden></div>
+    <div class="profile" id="profileChip"></div>
     <div class="chip-info" id="titleInfo"></div>
     <button class="btn primary" id="playBtn">Start running</button>
     <div class="row">
       <button class="btn" id="toCustom">Character</button>
       <button class="btn" id="toMajors">Major</button>
+      <button class="btn" id="toBoard">Leaderboard</button>
+      <button class="btn" id="toShare">Share</button>
     </div>
     <div class="howto" id="howto"></div>
+  </div>
+</section>
+
+<section id="login" class="screen" hidden>
+  <div class="lg-card" id="lgForm">
+    <div class="eyebrow">ADA Run · Student sign-in</div>
+    <h2>Who's running today?</h2>
+    <p class="lg-note">No password needed. Your profile, best scores and progress are saved in this browser.</p>
+    <div class="lg-saved" id="lgSaved"></div>
+    <label><span class="eyebrow">Full name</span><input class="name-in" id="lgName" maxlength="28" autocomplete="name" placeholder="e.g. Aysel Mammadova"></label>
+    <label><span class="eyebrow">Student ID or ADA email</span><input class="name-in" id="lgId" maxlength="60" autocomplete="username" placeholder="e.g. 12345 or aysel@ada.edu.az"></label>
+    <label><span class="eyebrow">Major</span><select class="name-in" id="lgMajor"></select></label>
+    <div><span class="eyebrow">Academic year</span><div class="opts" id="lgYear"></div></div>
+    <p class="lg-err" id="lgErr" role="alert" hidden></p>
+    <div class="lg-actions"><button type="button" class="btn" id="lgBack">Back</button><button type="button" class="btn primary" id="lgGo">Sign in</button></div>
+  </div>
+</section>
+
+<section id="board" class="screen" hidden>
+  <div class="mj-wrap">
+    <div class="mj-top">
+      <div><div class="eyebrow">ADA Run · Scoreboard</div><h2>Leaderboard</h2></div>
+      <div class="tabs" role="group" aria-label="Leaderboard">
+        <button id="lbAll" aria-pressed="true">All ADA</button>
+        <button id="lbLive" aria-pressed="false">Live now</button>
+        <button id="lbDev" aria-pressed="false">This device</button>
+      </div>
+    </div>
+    <p class="lb-status" id="lbStatus"></p>
+    <div class="lb-list" id="lbList"></div>
+    <div class="mj-actions">
+      <button class="btn" id="lbBack">Back</button>
+      <button class="btn primary" id="lbPlay">Play</button>
+    </div>
   </div>
 </section>
 
@@ -279,8 +389,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     </div>
     <div class="mj-list" id="mjList"></div>
     <div class="mj-foot">
-      <div class="eyebrow">Game mode</div>
-      <div class="modes" id="modes"></div>
+      <div class="eyebrow">Academic year <small id="mjYearNote"></small></div>
+      <div class="opts" id="mjYear"></div>
       <div class="mj-actions">
         <button class="btn" id="majorsBack">Back</button>
         <button class="btn primary" id="majorsGo">Start</button>
@@ -296,6 +406,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
       <div class="val"><span id="pts">0.00</span><small>/ 100</small></div>
       <div class="bar"><i id="ptsBar"></i></div>
       <div class="books"><span id="books">0 books</span><span class="mult" id="mult" hidden>x2</span></div>
+      <div class="sline"><span>Score <b id="hudScore">0</b></span><span>🧠 <b id="hudLearn">0</b> learned</span></div>
       <div id="combo" hidden><b id="comboX">x1</b><span id="comboN">COMBO 0</span><i><u id="comboT"></u></i></div>
     </div>
     <div class="course">
@@ -309,11 +420,23 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     </div>
   </div>
   <div id="toast"></div>
-  <div id="turnHint" hidden></div>
+  <div id="gateQ" hidden><div class="eyebrow" id="gateTag">Quiz gate</div><p id="gateText"></p><div class="gate-hint" id="gateHint">Run through the right answer</div></div>
   <div id="fwarn" hidden>THE F IS RIGHT BEHIND YOU!</div>
   <div id="powers"></div>
+  <div id="live" hidden></div>
   <button id="boardBtn" aria-label="Hoverboard"><span>🛹</span><small>BOARD</small><b id="boardCount">2</b></button>
 </div>
+
+<section id="share" class="screen modal" hidden>
+  <div class="card">
+    <div class="eyebrow" style="color:#6b6250">ADA Run · Invite classmates</div>
+    <h2>Share the game</h2>
+    <p class="share-msg" id="shareMsg"></p>
+    <div class="share-row"><input id="shareUrl" readonly aria-label="Game link"><button class="btn primary" id="shareCopy">Copy</button></div>
+    <p class="share-note" id="shareNote">Send this link in WhatsApp, Telegram or Instagram. Friends who open it while signed in to Claude can race you live and join the leaderboard.</p>
+    <div class="actions"><button class="btn green" id="shareNative" hidden>Share…</button><button class="btn" id="shareClose">Close</button></div>
+  </div>
+</section>
 
 <section id="pause" class="screen modal" hidden>
   <div class="card">
@@ -346,10 +469,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     <div class="gpa" id="overGpa"></div>
     <div class="eyebrow" style="color:#6b6250">Transcript</div>
     <div class="transcript" id="overTranscript"></div>
+    <div class="learned" id="overLearned"></div>
     <div class="stats" id="overStats"></div>
     <div class="actions">
       <button class="btn primary" id="retryBtn">Play again</button>
       <button class="btn" id="overMajor">Change major</button>
+      <button class="btn" id="overBoard">Leaderboard</button>
+      <button class="btn" id="overShare">Challenge friends</button>
       <button class="btn" id="overMenu">Menu</button>
     </div>
   </div>
@@ -369,10 +495,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     <div class="gpa" id="wonGpa"></div>
     <div class="eyebrow" style="color:#6b6250">Transcript</div>
     <div class="transcript" id="wonTranscript"></div>
+    <div class="learned" id="wonLearned"></div>
     <div class="stats" id="wonStats"></div>
     <div class="actions">
       <button class="btn green" id="wonRetry">Play again</button>
       <button class="btn" id="wonMajor">Change major</button>
+      <button class="btn" id="wonBoard">Leaderboard</button>
+      <button class="btn" id="wonShare">Share</button>
       <button class="btn" id="wonMenu">Menu</button>
     </div>
   </div>
@@ -524,17 +653,69 @@ let save = { cfg: null, major: DEFAULT_MAJOR, mode: 'sem', best: {}, muted: fals
 try { const s = JSON.parse(localStorage.getItem(SKEY)); if (s) save = Object.assign(save, s); } catch (e) {}
 if (!MAJORS[save.major]) save.major = DEFAULT_MAJOR;
 function persist() { try { localStorage.setItem(SKEY, JSON.stringify(save)); } catch (e) {} }
+
+// ---------- v6: student profiles (no passwords, saved in this browser) ----------
+if (!save.profiles || typeof save.profiles !== 'object') save.profiles = {};
+const yearsOf = m => m.lvl === 'B' ? 4 : 2;
+const profKey = id => String(id).trim().toLowerCase();
+const validStudentId = id => /^\d{4,10}$/.test(id) || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(id);
+function activeProfile() { return save.profiles[save.active] || null; }
+function curYear() { const p = activeProfile(), m = MAJORS[save.major]; return clampN(p ? p.year : (save.year || 1), 1, yearsOf(m)); }
+const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+// the catalogue lists courses in study order; bachelor codes carry the year as their first digit (1xxx = year 1)
+function courseYearOf(m, i) {
+  const Y = yearsOf(m), d = /\d/.exec(m.c[i][0] || '');
+  if (m.lvl === 'B' && d && +d[0] >= 1 && +d[0] <= 4) return +d[0];
+  return Math.min(Y, Math.floor(i / m.c.length * Y) + 1);
+}
+// a student's run covers their current year and the year before it, never a later year
+function runCourses(m, y) {
+  const all = m.c.map((c, i) => [c[0], c[1], courseYearOf(m, i)]);
+  let lo = Math.max(1, y - 1), list = all.filter(c => c[2] >= lo && c[2] <= y);
+  while (list.length < 4 && lo > 1) { lo--; list = all.filter(c => c[2] >= lo && c[2] <= y); }
+  return list.length ? list : all;
+}
+
+// ---------- v6: scores storage: this device always, plus the shared ADA leaderboard when the page can reach it ----------
+const Store = {
+  db: null, uid: null, mode: 'local', listeners: [], rows: null, err: null, unsub: null,
+  init() {
+    const cl = window.claude;
+    if (!cl || typeof cl.use !== 'function') return;
+    Promise.all([cl.use('db'), cl.use('user')]).then(async ([db, user]) => {
+      if (!db) return;
+      this.db = db;
+      try { this.uid = user ? await user.id() : null; } catch (e) { this.uid = null; }
+      this.mode = 'global'; this.emit();
+    }).catch(() => {});
+  },
+  watch() {
+    if (!this.db || this.unsub) return;
+    this.unsub = this.db.collection('scores').orderBy('score', 'desc').limit(100).onSnapshot(
+      snap => { this.rows = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); this.err = null; this.emit(); },
+      e => { this.err = (e && e.code) || 'error'; this.emit(); });
+  },
+  async submit(entry) {
+    if (!this.db || !this.uid) return false;
+    try {
+      const ref = this.db.doc('scores/' + this.uid), cur = await ref.get();
+      const old = cur.exists ? cur.data() : null;
+      if (old && (old.score || 0) >= entry.score) return true;
+      await ref.set(entry); return true;
+    } catch (e) { this.err = (e && e.code) || 'error'; return false; }
+  },
+  emit() { this.listeners.forEach(f => f()); },
+};
+Store.init();
 const shortMajor = m => m.en.replace(/^(Bachelor|Master) of (Science|Arts|Business Administration|Public Administration|Laws|Architecture)( in )?/, (all, lvl, what, inn) => inn ? '' : (lvl === 'Master' ? 'Master of ' : 'Bachelor of ') + what).replace(/^Bachelor in /, '') || m.en;
 
-const MODES = {
-  sem:  { name: 'Semester',     cents: 1,   desc: '0.01 per book · combos up to x5 · pomegranate book 1.00' },
-  mid:  { name: 'Midterm',      cents: 10,  desc: '0.10 per book · combos up to x5' },
-  quiz: { name: 'Crash course', cents: 100, desc: '1.00 per book · the fastest pass' },
-};
+// v6.1: one mode for everyone (0.10 per book, combos up to x5, pomegranate book 1.00), so all scores compare fairly
+const MODES = { std: { name: 'ADA Run', cents: 10 } };
+save.mode = 'std';
 
 // ---------- character options ----------
 const OPTS = {
-  gender: [['girl', 'Girl'], ['boy', 'Boy']],
+  gender: [['girl', '♀ Girl'], ['boy', '♂ Boy']],
   skin: ['#f7d7bc', '#eab991', '#cf9468', '#a06a43', '#6e442a'],
   hair: [['short', 'Short'], ['long', 'Long'], ['pony', 'Ponytail'], ['bun', 'Bun'], ['curly', 'Curly'], ['hijab', 'Hijab']],
   hairColor: ['#1d1410', '#4a2c1a', '#8a5a2b', '#d9b26a', '#a8382c', '#e9e2d6', '#2e6f80', '#7a4fb0'],
@@ -546,7 +727,7 @@ const OPTS = {
   acc: [['bag', 'Backpack'], ['glasses', 'Glasses'], ['phones', 'Headphones'], ['cap', 'Cap']],
 };
 const DEF = {
-  girl: { gender: 'girl', skin: '#eab991', hair: 'pony', hairColor: '#4a2c1a', top: 'hoodie', topColor: '#b0465c', bottom: 'jeans', bottomColor: '#2b4a7a', shoes: '#fbfaf6', acc: ['bag'], name: '' },
+  girl: { gender: 'girl', skin: '#eab991', hair: 'long', hairColor: '#4a2c1a', top: 'hoodie', topColor: '#b0465c', bottom: 'skirt', bottomColor: '#123947', shoes: '#fbfaf6', acc: ['bag'], name: '' },
   boy:  { gender: 'boy',  skin: '#eab991', hair: 'short', hairColor: '#1d1410', top: 'tee', topColor: '#123947', bottom: 'jeans', bottomColor: '#2b4a7a', shoes: '#fbfaf6', acc: ['bag'], name: '' },
 };
 let cfg = Object.assign({}, DEF.girl, save.cfg || {});
@@ -832,16 +1013,17 @@ function buildCharacter(c) {
   const longSleeve = c.top !== 'tee', bareLegs = c.bottom === 'shorts' || c.bottom === 'skirt';
   const root = new THREE.Group(), body = new THREE.Group(), bob = new THREE.Group(); root.add(body); body.add(bob);
   const R = { root, body, bob };
-  const tw = girl ? 0.38 : 0.44, sx = girl ? 0.24 : 0.27;
+  // v6: clearly different builds: broad shoulders and a strong jaw for the boy, a waist, hips and softer features for the girl
+  const tw = girl ? 0.36 : 0.5, sx = girl ? 0.23 : 0.31, armW = girl ? 0.11 : 0.15, legW = girl ? 0.17 : 0.2;
   function leg(side) {
     const th = new THREE.Group(); th.position.set(side * 0.095, 0.95, 0); bob.add(th);
     const thighM = c.bottom === 'skirt' || c.bottom === 'shorts' ? (c.bottom === 'skirt' ? skin : bot) : bot;
     th.add(mesh(GEO.sph, thighM === skin ? bot : thighM, 0.2, 0.2, 0.2, 0, 0, 0));
-    th.add(mesh(GEO.cyl, thighM, 0.19, 0.52, 0.19, 0, -0.23, 0));
+    th.add(mesh(GEO.cyl, thighM, legW, 0.52, legW, 0, -0.23, 0));
     if (c.bottom === 'shorts') th.add(mesh(GEO.cyl, skin, 0.165, 0.2, 0.165, 0, -0.38, 0));
     const kn = new THREE.Group(); kn.position.y = -0.46; th.add(kn);
     kn.add(mesh(GEO.sph, bareLegs ? skin : bot, 0.18, 0.18, 0.18, 0, 0, 0));
-    kn.add(mesh(GEO.cyl, bareLegs ? skin : bot, 0.16, 0.46, 0.16, 0, -0.22, 0));
+    kn.add(mesh(GEO.cyl, bareLegs ? skin : bot, legW - 0.03, 0.46, legW - 0.03, 0, -0.22, 0));
     if (c.bottom === 'track') { th.add(mesh(GEO.box, white, 0.02, 0.46, 0.04, side * 0.085, -0.23, 0)); kn.add(mesh(GEO.box, white, 0.02, 0.42, 0.04, side * 0.07, -0.22, 0)); }
     kn.add(mesh(GEO.box, shoe, 0.16, 0.11, 0.32, 0, -0.45, -0.05));
     kn.add(mesh(GEO.box, white, 0.165, 0.035, 0.33, 0, -0.495, -0.05));
@@ -849,12 +1031,24 @@ function buildCharacter(c) {
     return [th, kn];
   }
   [R.thL, R.knL] = leg(-1); [R.thR, R.knR] = leg(1);
-  bob.add(mesh(GEO.box, bot, tw - 0.02, 0.22, 0.24, 0, 0.94, 0));
-  bob.add(mesh(GEO.sph, bot, tw - 0.04, 0.2, 0.24, 0, 0.86, 0));
+  const hipW = girl ? 0.46 : tw - 0.04;
+  bob.add(mesh(GEO.box, bot, hipW - 0.02, 0.22, 0.24, 0, 0.94, 0));
+  bob.add(mesh(GEO.sph, bot, hipW, girl ? 0.26 : 0.2, girl ? 0.27 : 0.24, 0, 0.88, 0));
   if (c.bottom === 'skirt') bob.add(mesh(GEO.cone, bot, 0.66, 0.4, 0.5, 0, 0.8, 0));
   const up = new THREE.Group(); up.position.y = 0.95; bob.add(up); R.up = up;
   const U = new THREE.Group(); U.position.y = -0.95; up.add(U);
-  U.add(mesh(GEO.box, top, tw, 0.58, 0.25, 0, 1.24, 0));
+  if (girl) {
+    // fitted top: chest, narrow waist, flared over the hips, with a soft bust line
+    U.add(mesh(GEO.box, top, tw, 0.3, 0.24, 0, 1.36, 0));
+    U.add(mesh(GEO.box, top, tw - 0.08, 0.2, 0.2, 0, 1.13, 0));
+    U.add(mesh(GEO.cone, top, 0.44, 0.16, 0.28, 0, 1.02, 0));
+    [-1, 1].forEach(k => U.add(mesh(GEO.sph, top, 0.11, 0.1, 0.06, k * 0.075, 1.33, -0.11)));
+  } else {
+    // V-shaped torso: wide chest and shoulders tapering to the waist
+    U.add(mesh(GEO.box, top, tw, 0.34, 0.27, 0, 1.33, 0));
+    U.add(mesh(GEO.box, top, tw - 0.1, 0.26, 0.24, 0, 1.08, 0));
+    [-1, 1].forEach(k => U.add(mesh(GEO.sph, top, 0.2, 0.18, 0.24, k * (tw / 2 - 0.02), 1.46, 0)));
+  }
   U.add(mesh(GEO.sph, top, tw + 0.04, 0.16, 0.27, 0, 1.49, 0));
   if (c.top === 'hoodie') {
     U.add(mesh(GEO.sph, topDk, 0.36, 0.2, 0.2, 0, 1.52, 0.12));
@@ -874,27 +1068,36 @@ function buildCharacter(c) {
     U.add(mesh(GEO.box, M(C.crimson), 0.04, 0.28, 0.02, 0, 1.32, -0.134));
     U.add(mesh(GEO.sph, M('#ffc23a'), 0.03, 0.03, 0.02, 0.08, 1.12, -0.13));
   }
-  U.add(mesh(GEO.cyl, skin, 0.1, 0.1, 0.1, 0, 1.56, 0));
+  U.add(mesh(GEO.cyl, skin, girl ? 0.085 : 0.13, 0.12, girl ? 0.085 : 0.13, 0, 1.56, 0));
   const lanyard = M(C.crimson);
   [-1, 1].forEach(k => { const l = mesh(GEO.box, lanyard, 0.022, 0.3, 0.012, k * 0.055, 1.38, -0.135); l.rotation.z = k * 0.28; U.add(l); });
   const idc = new THREE.Group(); idc.position.set(0, 1.25, -0.142); U.add(idc); R.idCard = idc;
   idc.add(mesh(GEO.box, M('#ffffff'), 0.13, 0.17, 0.008, 0, -0.05, 0));
   const face = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ map: idTex })); face.scale.set(0.122, 0.162, 1); face.position.set(0, -0.05, -0.0045); face.rotation.y = Math.PI; idc.add(face);
   const head = new THREE.Group(); head.position.y = 1.74; U.add(head); R.head = head;
-  head.add(mesh(GEO.sph, skin, 0.36, 0.38, 0.35, 0, 0, 0));
+  head.add(mesh(GEO.sph, skin, girl ? 0.34 : 0.37, girl ? 0.37 : 0.38, 0.35, 0, 0, 0));
+  if (!girl) { head.add(mesh(GEO.box, skin, 0.25, 0.12, 0.24, 0, -0.13, -0.03)); }
+  else [-1, 1].forEach(k => head.add(mesh(GEO.sph, M('#ffc23a', { emissive: 0x5a3a00 }), 0.035, 0.035, 0.035, k * 0.175, -0.07, -0.01)));
   const faceZ = c.hair === 'hijab' ? -0.215 : -0.165;
   if (c.hair === 'hijab') { head.add(mesh(GEO.sph, hair, 0.43, 0.45, 0.43, 0, 0.01, 0.015)); head.add(mesh(GEO.sph, skin, 0.26, 0.3, 0.1, 0, -0.01, -0.17)); U.add(mesh(GEO.cone, hair, 0.62, 0.3, 0.5, 0, 1.47, 0.01)); }
   const eyes = [];
   [-0.065, 0.065].forEach(x => { const e = new THREE.Group(); e.position.set(x, 0.02, faceZ); head.add(e); e.add(mesh(GEO.sph, white, 0.075, 0.085, 0.03, 0, 0, 0)); e.add(mesh(GEO.sph, dark, 0.045, 0.055, 0.03, 0, -0.005, -0.008)); e.add(mesh(GEO.sph, white, 0.015, 0.015, 0.01, 0.01, 0.015, -0.02)); eyes.push(e); });
   R.eyes = eyes;
-  const brows = [-1, 1].map(k => { const b = mesh(GEO.box, M(shade(c.hairColor, 0.8)), 0.085, 0.018, 0.012, k * 0.068, 0.095, faceZ - 0.006); head.add(b); return b; });
-  const smile = mesh(GEO.arc, M('#9c3b36'), 0.13, 0.11, 0.1, 0, -0.07, faceZ - 0.006); smile.rotation.z = Math.PI; head.add(smile);
+  const brows = [-1, 1].map(k => { const b = mesh(GEO.box, M(shade(c.hairColor, 0.8)), girl ? 0.08 : 0.095, girl ? 0.014 : 0.03, 0.012, k * 0.068, 0.095, faceZ - 0.006); head.add(b); return b; });
+  const smile = mesh(GEO.arc, M(girl ? '#d0405e' : '#9c3b36'), girl ? 0.12 : 0.13, girl ? 0.12 : 0.1, 0.1, 0, -0.07, faceZ - 0.006); smile.rotation.z = Math.PI; head.add(smile);
   const mouthO = mesh(GEO.sph, M('#5a1d1d'), 0.06, 0.07, 0.02, 0, -0.085, faceZ - 0.004); mouthO.visible = false; head.add(mouthO);
   head.add(mesh(GEO.sph, M(shade(c.skin, 0.9)), 0.04, 0.05, 0.04, 0, -0.02, faceZ - 0.02));
   R.face = { brows, smile, mouthO };
-  if (girl) [-0.1, 0.1].forEach(x => head.add(mesh(GEO.sph, M('#f08f8f', { transparent: true, opacity: 0.45 }), 0.05, 0.03, 0.01, x, -0.045, faceZ + 0.012)));
+  if (girl) {
+    [-0.1, 0.1].forEach(x => head.add(mesh(GEO.sph, M('#f08f8f', { transparent: true, opacity: 0.45 }), 0.05, 0.03, 0.01, x, -0.045, faceZ + 0.012)));
+    // eyelashes flicking outward
+    [-1, 1].forEach(k => { const l = mesh(GEO.box, dark, 0.05, 0.014, 0.01, k * 0.1, 0.06, faceZ - 0.012); l.rotation.z = k * 0.5; head.add(l); });
+  }
   if (c.hair !== 'hijab') {
-    if (c.hair !== 'curly') { head.add(mesh(GEO.sph, hair, 0.39, 0.32, 0.38, 0, 0.075, 0.015)); head.add(mesh(GEO.box, hair, 0.29, 0.07, 0.08, 0, 0.14, -0.135)); }
+    if (c.hair !== 'curly') { head.add(mesh(GEO.sph, hair, girl ? 0.38 : 0.39, girl ? 0.32 : 0.27, 0.38, 0, girl ? 0.075 : 0.1, 0.015)); head.add(mesh(GEO.box, hair, 0.29, 0.07, 0.08, 0, 0.14, -0.135)); }
+    if (c.hair === 'short' && girl) { head.add(mesh(GEO.box, hair, 0.4, 0.3, 0.3, 0, -0.04, 0.05)); [-1, 1].forEach(k => head.add(mesh(GEO.box, hair, 0.07, 0.3, 0.2, k * 0.18, -0.06, -0.05))); }
+    if (girl && c.hair !== 'curly') { const f = mesh(GEO.box, hair, 0.22, 0.08, 0.06, 0.05, 0.12, -0.16); f.rotation.z = -0.3; head.add(f); }
+    if (c.hair === 'short' && !girl) head.add(mesh(GEO.box, hair, 0.35, 0.1, 0.06, 0, 0.0, 0.17));
     if (c.hair === 'long') { const lg = new THREE.Group(); lg.position.set(0, 0.06, 0.12); head.add(lg); lg.add(mesh(GEO.box, hair, 0.37, 0.52, 0.1, 0, -0.24, 0)); R.hairBack = lg; head.add(mesh(GEO.box, hair, 0.06, 0.36, 0.14, -0.18, -0.1, 0.01)); head.add(mesh(GEO.box, hair, 0.06, 0.36, 0.14, 0.18, -0.1, 0.01)); }
     if (c.hair === 'pony') { const p = new THREE.Group(); p.position.set(0, 0.09, 0.18); head.add(p); const t = mesh(GEO.cone, hair, 0.17, 0.44, 0.17, 0, -0.21, 0.04); t.rotation.x = Math.PI + 0.25; p.add(t); p.add(mesh(GEO.sph, M(C.crimson), 0.07, 0.07, 0.07, 0, 0, 0)); R.hairBack = p; }
     if (c.hair === 'bun') { const b = new THREE.Group(); b.position.set(0, 0.2, 0.09); head.add(b); b.add(mesh(GEO.sph, hair, 0.19, 0.19, 0.19, 0, 0, 0)); R.hairBack = b; }
@@ -911,9 +1114,9 @@ function buildCharacter(c) {
   }
   function arm(side) {
     const sh = new THREE.Group(); sh.position.set(side * sx, 1.47, 0); U.add(sh);
-    sh.add(mesh(GEO.cyl, top, 0.13, 0.32, 0.13, 0, -0.15, 0));
+    sh.add(mesh(GEO.cyl, top, armW + 0.015, 0.32, armW + 0.015, 0, -0.15, 0));
     const el = new THREE.Group(); el.position.y = -0.31; sh.add(el);
-    el.add(mesh(GEO.cyl, longSleeve ? top : skin, 0.115, 0.28, 0.115, 0, -0.13, 0));
+    el.add(mesh(GEO.cyl, longSleeve ? top : skin, armW, 0.28, armW, 0, -0.13, 0));
     el.add(mesh(GEO.sph, skin, 0.13, 0.14, 0.13, 0, -0.3, 0));
     return [sh, el];
   }
@@ -928,6 +1131,7 @@ function buildCharacter(c) {
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.45, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25, depthWrite: false }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.03; root.add(shadow); R.shadow = shadow;
   R.spring = { hair: 0, hairV: 0, bag: 0, bagV: 0, prevY: 0 };
+  bob.scale.setScalar(girl ? 0.96 : 1.05);
   root.userData = R;
   return root;
 }
@@ -1083,6 +1287,11 @@ const OBST = {
   cart:   { kind: 'block', label: 'Snack break', color: '#1b5b83', reason: 'You stopped at the snack cart and missed the lecture' },
   cones:  { kind: 'low',   label: 'Caution', color: '#d62946', reason: 'You ran through the cones', h: 0.9, minor: true },
   barrier:{ kind: 'block', label: 'Wrong way', color: '#cb2742', reason: 'You ignored the warning signs before the turn' },
+  // v6: academic obstacles
+  exam:     { kind: 'block', label: 'Exam barrier', color: '#a41f35', reason: 'You hit the exam barrier unprepared' },
+  textbooks:{ kind: 'low',   label: 'Unread textbooks', color: '#1b5b83', reason: 'You tripped over the reading you never did', h: 1.1 },
+  desk:     { kind: 'block', label: 'Laptop desk', color: '#123947', reason: 'You sat down “for a minute” at a laptop desk' },
+  backpack: { kind: 'block', label: 'Heavy backpack', color: '#b0293f', reason: 'Your overloaded backpack stopped you cold' },
   swing:  { kind: 'dyn',   label: 'Exam clock', color: '#a41f35', reason: 'The exam clock swung into you. Time is up!' },
   slider: { kind: 'dyn',   label: 'Pop quiz!', color: '#298cca', reason: 'A surprise pop quiz caught you off guard' },
 };
@@ -1170,6 +1379,19 @@ const DYN = {
   slider: (t, ph) => ({ x: LANE * Math.sin(1.55 * t + ph), top: 1.1 }),
 };
 
+const examTex = canvasTex(512, 192, (g, w, h) => {
+  g.fillStyle = '#a41f35'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.fillRect(8, 8, w - 16, h - 16); g.fillStyle = '#a41f35'; g.fillRect(16, 16, w - 32, h - 32);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = `900 54px ${FONT}`; g.fillText('EXAM IN', w / 2, 66); g.fillText('PROGRESS', w / 2, 122);
+  g.font = `700 22px ${FONT}`; g.fillText('SILENCE · NO ENTRY', w / 2, 164);
+});
+const laptopTex = canvasTex(256, 160, (g, w, h) => {
+  g.fillStyle = '#0f2f45'; g.fillRect(0, 0, w, h); g.fillStyle = '#2681ba'; g.fillRect(0, 0, w, 26);
+  g.fillStyle = '#fff'; g.font = `800 16px ${FONT}`; g.fillText('Blackboard · ADA', 10, 18);
+  g.fillStyle = '#db445e'; g.font = `900 30px ${FONT}`; g.fillText('DUE 23:59', 18, 76);
+  g.fillStyle = '#d1dde5'; for (let i = 0; i < 3; i++) g.fillRect(18, 96 + i * 18, 150 + (i % 2) * 50, 8);
+});
+const BOOKCOL = ['#123947', '#b0293f', '#2681ba', '#f4f7f9', '#1b5b83', '#db445e'];
 function buildObstacle(type, nLanes, opt = {}) {
   const g = new THREE.Group(), w = nLanes * LANE, black = M('#1d1d1f'), anim = [];
   if (type === 'phone') {
@@ -1288,6 +1510,55 @@ function buildObstacle(type, nLanes, opt = {}) {
     const board = new THREE.Mesh(GEO.plane, chevMat[dir > 0 ? 1 : 0]); board.scale.set(w - 0.4, 0.86, 1); board.position.set(0, 2.38, 0.0); g.add(board);
     const lamps = [-1, 1].map(k => { const gl = sprite(glowTex, 1.4, 1.4, true); gl.material.color.set('#da3a55'); gl.position.set(k * (w / 2 - 0.3), 2.95, 0.1); g.add(gl); return gl; });
     anim.push(t => lamps.forEach((l, i) => { l.material.opacity = Math.sin(t * 10 + i * Math.PI) > 0 ? 1 : 0.1; }));
+  } else if (type === 'exam') {
+    // exam-hall barrier: concrete base, pomegranate stripes and an EXAM IN PROGRESS board
+    const conc = M('#f4f7f9');
+    g.add(mesh(GEO.box, conc, w - 0.25, 0.8, 0.7, 0, 0.4, 0));
+    g.add(mesh(GEO.box, conc, w - 0.25, 0.55, 0.36, 0, 1.07, 0));
+    g.add(mesh(GEO.box, M('#c82641'), w - 0.2, 0.09, 0.72, 0, 0.82, 0));
+    [-1, 1].forEach(k => g.add(mesh(GEO.box, M('#113a53'), 0.1, 1.3, 0.1, k * (w / 2 - 0.45), 1.95, 0)));
+    g.add(mesh(GEO.box, M('#113a53'), w - 0.3, 1.0, 0.08, 0, 2.4, -0.06));
+    const board = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ map: examTex })); board.scale.set(Math.min(w - 0.4, 2.4), 0.9, 1); board.position.set(0, 2.4, 0.0); g.add(board);
+    const lamp = sprite(glowTex, 1.3, 1.3, true); lamp.material.color.set('#da3a55'); lamp.position.set(0, 3.05, 0.1); g.add(lamp);
+    anim.push(t => { lamp.material.opacity = Math.sin(t * 8) > 0 ? 1 : 0.15; });
+  } else if (type === 'textbooks') {
+    // a knee-high wall of giant unread textbooks
+    const n = Math.max(2, Math.round(w / 0.75));
+    for (let i = 0; i < n; i++) {
+      const x = -w / 2 + 0.2 + (i + 0.5) * (w - 0.4) / n, layers = 2 + (i % 2);
+      for (let L = 0; L < layers; L++) {
+        const hgt = 0.3, col = BOOKCOL[(i * 3 + L) % BOOKCOL.length];
+        const b = new THREE.Group(); b.position.set(x + rand(-0.05, 0.05), 0.16 + L * hgt, 0); b.rotation.y = rand(-0.15, 0.15); g.add(b);
+        b.add(mesh(GEO.box, M(col), (w - 0.4) / n - 0.04, hgt - 0.02, 0.9, 0, 0, 0));
+        b.add(mesh(GEO.box, M('#fbfaf6'), (w - 0.4) / n - 0.1, hgt - 0.08, 0.92, 0, 0, 0.0));
+      }
+    }
+  } else if (type === 'desk') {
+    // study desk with a glowing laptop (deadline tonight) and a chair
+    const wood = M('#e8eef2'), leg = M('#1b5b83');
+    g.add(mesh(GEO.box, wood, 1.9, 0.12, 1.0, 0, 1.05, 0));
+    [-1, 1].forEach(a => [-1, 1].forEach(b => g.add(mesh(GEO.box, leg, 0.08, 1.0, 0.08, a * 0.85, 0.5, b * 0.4))));
+    g.add(mesh(GEO.box, M('#1b5b83'), 1.9, 0.5, 0.06, 0, 0.75, -0.45));
+    g.add(mesh(GEO.box, M('#c9d3da'), 0.9, 0.04, 0.6, 0, 1.13, 0.05));
+    const lid = new THREE.Group(); lid.position.set(0, 1.15, -0.25); lid.rotation.x = -0.25; g.add(lid);
+    lid.add(mesh(GEO.box, M('#c9d3da'), 0.9, 0.62, 0.04, 0, 0.31, 0));
+    const scr = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ map: laptopTex })); scr.scale.set(0.82, 0.54, 1); scr.position.set(0, 0.31, 0.025); lid.add(scr);
+    const glow = sprite(glowTex, 2.0, 1.6, true); glow.material.color.set('#9fceeb'); glow.material.opacity = 0.55; glow.position.set(0, 1.55, 0.2); g.add(glow);
+    // the chair in front of it
+    g.add(mesh(GEO.box, M('#b0293f'), 0.6, 0.1, 0.55, 0, 0.6, 0.75)); g.add(mesh(GEO.box, M('#b0293f'), 0.6, 0.6, 0.08, 0, 0.95, 1.02));
+    g.add(mesh(GEO.cyl, M('#3a3a42'), 0.08, 0.55, 0.08, 0, 0.3, 0.75));
+    anim.push(t => { glow.material.opacity = 0.45 + Math.sin(t * 3) * 0.12; });
+  } else if (type === 'backpack') {
+    // a giant overstuffed ADA backpack with books spilling out
+    const bp = new THREE.Group(); g.add(bp);
+    bp.add(mesh(GEO.box, M('#123947'), 1.5, 1.9, 0.95, 0, 1.0, 0));
+    bp.add(mesh(GEO.sph, M('#123947'), 1.5, 0.6, 0.95, 0, 1.95, 0));
+    bp.add(mesh(GEO.box, M('#b0293f'), 1.52, 0.3, 0.97, 0, 1.55, 0));
+    bp.add(mesh(GEO.box, M('#1b5b83'), 1.1, 0.75, 0.25, 0, 0.75, 0.55));
+    bp.add(mesh(GEO.box, M('#fbfaf6'), 1.12, 0.06, 0.27, 0, 1.1, 0.56));
+    [-0.45, 0.45].forEach(x => bp.add(mesh(GEO.box, M('#0d2a38'), 0.16, 1.6, 0.12, x, 1.05, -0.52)));
+    for (let i = 0; i < 3; i++) { const b = mesh(GEO.box, M(BOOKCOL[i + 1]), 0.32, 0.5, 0.12, -0.35 + i * 0.35, 2.25, 0.05); b.rotation.z = (i - 1) * 0.3; bp.add(b); }
+    anim.push(t => { bp.rotation.z = Math.sin(t * 2.2) * 0.04; });
   } else if (type === 'swing') {
     // a giant exam clock swinging across all lanes from a navy gantry
     const navy = M('#10364e'), gold = M('#d62a47', { emissive: 0x3e0c14 }), ph = opt.phase || 0;
@@ -1943,7 +2214,7 @@ function buildCampus(seg, first) {
   seg.district = D.key;
   const startDecor = first ? -50 : 16;
   for (const side of [-1, 1]) {
-    const limit = side === turn ? len - HALFW - 10 : len - 2;
+    const limit = len - 2;
     const land = side < 0 ? D.L : D.R;
     // walking path through the lawn, parallel to the track
     walkPath(grp, side * (HALFW + 7.5), startDecor, limit);
@@ -1987,16 +2258,6 @@ function buildCampus(seg, first) {
       else if (Math.random() < 0.5) mapSign(grp, side * (HALFW + 2.4), t); else anyTree(grp, side * (HALFW + rand(3.8, 5.5)), -t);
     }
   }
-  // dead-end ADA building with the logo and the turn arrow
-  const endMat = new THREE.MeshLambertMaterial({ map: endTex[turn > 0 ? 1 : 0] });
-  const sandF = MAT.sand, roofM = M(ADA.sandLt);
-  const endB = new THREE.Mesh(boxUV(22, 12, 7, 14), [sandF, sandF, roofM, roofM, endMat, sandF]);
-  endB.position.set(-turn * 3, 6, -(len + HALFW + 0.4 + 3.5)); grp.add(endB); seg.disposables.push(endMat, endB.geometry);
-  bx(grp, MAT.curtain, 20, 6, 6, -turn * 3, 15, -(len + HALFW + 0.4 + 4.5), 12);
-  bx(grp, M(ADA.white), 23, 0.5, 8, -turn * 3, 12.2, -(len + HALFW + 0.4 + 3.5));
-  bx(grp, MAT.goldLit, 23, 0.14, 0.1, -turn * 3, 12.0, -(len + HALFW + 0.4 - 0.55));
-  const arrowGlow = sprite(glowTex, 9, 5, true); arrowGlow.material.color.set('#d1dde5'); arrowGlow.position.set(0, 4.6, -(len + HALFW + 0.2)); grp.add(arrowGlow);
-  seg.anims.push(() => { arrowGlow.material.opacity = 0.3 + Math.sin(clock * 6) * 0.2; });
   // gate or district arch with flags
   if (first) { logoGate(grp, 26); [-1, 1].forEach(sd => { flagpole(grp, sd * (HALFW + 3.2), -22.5, 'az', sd, 10); flagpole(grp, sd * (HALFW + 3.2), -29.5, 'ada', sd, 10); }); }
   else {
@@ -2104,15 +2365,14 @@ function buildPower(kind) {
 function addSegment() {
   const prev = segs[segs.length - 1], first = !prev;
   const start = first ? { x: 0, z: 0 } : { x: prev.end.x, z: prev.end.z };
-  const dir = first ? 0 : (prev.dir + prev.turn + 4) % 4;
-  const rel = dir === 0 ? 0 : (dir === 1 ? 1 : -1);
-  const turn = rel === 1 ? -1 : rel === -1 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+  // v6: one straight boulevard; every segment carries straight on from the last
+  const dir = 0, turn = 0;
   const len = first ? 150 : randi(95, 160) + Math.round(clamp(genDist / 5000, 0, 1) * 40);
   const D = DIRS[dir], end = { x: start.x + D[0] * len, z: start.z + D[1] * len };
   const grp = new THREE.Group(); grp.position.set(start.x, 0, start.z); grp.rotation.y = -dir * Math.PI / 2; scene.add(grp);
   const seg = { start, end, dir, turn, len, grp, obs: [], items: [], powers: [], disposables: [], anims: [], idx: prev ? prev.idx + 1 : 0 };
   // floor (subdivided so the curved world bends smoothly)
-  const s0 = first ? -60 : HALFW, s1 = len + HALFW, fl = s1 - s0;
+  const s0 = first ? -60 : 0, s1 = len, fl = s1 - s0;
   const fg = new THREE.PlaneGeometry(HALFW * 2, fl, 1, Math.ceil(fl / 3)), uv = fg.attributes.uv;
   for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * fl / 8);
   const floor = new THREE.Mesh(fg, floorMat); floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -(s0 + fl / 2)); grp.add(floor);
@@ -2121,22 +2381,20 @@ function addSegment() {
   // stone kerbs with bollards, in short pieces so they bend with the world
   const kerb = M('#d1dde5'), bollard = M('#dce5eb');
   const addKerb = (lat, a, b) => { for (let x = a; x < b; x += 8) { const e = Math.min(b, x + 8); grp.add(mesh(GEO.box, kerb, 0.45, 0.22, e - x, lat, 0.11, -(x + e) / 2)); grp.add(mesh(GEO.cyl, bollard, 0.32, 0.8, 0.32, lat, 0.5, -(x + e) / 2)); } };
-  addKerb(turn * (HALFW + 0.22), s0, len - HALFW);
-  addKerb(-turn * (HALFW + 0.22), s0, len + HALFW + 0.45);
+  addKerb(HALFW + 0.22, s0, len);
+  addKerb(-(HALFW + 0.22), s0, len);
   buildCampus(seg, first);
   bakeStatic(seg);
-  // ---- obstacle course: fair patterns, a clean exit from the corner, warnings before the turn ----
+  // ---- obstacle course: fair patterns from the pattern library ----
   const diff = clamp(genDist / 5000, 0, 1), vAt = x => baseSpeed(genDist + x) * 1.15;
-  const vEnd = vAt(len), rowB = len - 24, rowA = rowB - (vEnd * 0.5 + 3.5);
   let s = first ? 60 : 26;
   if (!first && genDist > 250 && Math.random() < 0.45) { placeDynamic(seg, s + 6); s += 7 + reactGap(vAt(s)); }
-  const to = rowA - reactGap(vEnd);
+  const to = len - 4;
   while (s + 22 < to) {
     const v = vAt(s);
     s += placeSlot(seg, s, diff, v);
     s += reactGap(v) + rand(0, 7) * (1 - diff * 0.6);
   }
-  addPreTurn(seg, rowA, rowB, diff);
   genDist += len;
   segs.push(seg);
   return seg;
@@ -2146,8 +2404,9 @@ const baseSpeed = d => 13 + 16 * (1 - Math.exp(-d / 2600));
 const reactGap = v => v * 0.46 + 4;     // time to see a row, decide and change lane
 const dblGap = v => v * 0.36 + 2.8;     // slide out from under a banner, then jump
 const LANES = [-1, 0, 1];
-const DISTRACT = ['phone', 'party', 'game', 'sofa', 'bed', 'cart', 'cart', 'phone', 'game'];
-const WIDE_LOW = ['tiktok', 'hurdle', 'hurdle'], WIDE_HIGH = ['insta', 'youtube', 'banner', 'banner'];
+const DISTRACT = ['phone', 'party', 'game', 'sofa', 'bed', 'cart', 'phone', 'desk', 'desk', 'backpack', 'backpack', 'exam', 'textbooks'];
+const WALL = ['phone', 'cart', 'game', 'desk', 'backpack', 'exam'];
+const WIDE_LOW = ['tiktok', 'hurdle', 'textbooks', 'textbooks'], WIDE_HIGH = ['insta', 'youtube', 'banner', 'banner'];
 let unfairRows = 0;
 // a row is fair when at least one lane is not blocked by something you can't jump or slide past
 function fairRow(list) { const hard = new Set(); for (const o of list) if (OBST[o.type].kind === 'block') o.lanes.forEach(l => hard.add(l)); return hard.size < 3; }
@@ -2162,9 +2421,9 @@ function addObstacle(seg, type, s, lanes, opt = {}) {
   const info = OBST[type], n = lanes.length, center = (lanes[0] + lanes[n - 1]) / 2;
   const g = buildObstacle(type, n, Object.assign({ turn: seg.turn }, opt));
   g.position.set(center * LANE, 0, -s); seg.grp.add(g);
-  const lblY = type === 'swing' ? 8.0 : type === 'banner' ? 4.25 : type === 'barrier' ? 3.5 : info.kind === 'high' ? 3.5 : (info.kind === 'low' || type === 'slider' ? 1.95 : 3.6);
+  const lblY = type === 'swing' ? 8.0 : type === 'banner' ? 4.25 : type === 'barrier' || type === 'exam' ? 3.5 : type === 'backpack' ? 3.1 : type === 'desk' ? 2.6 : info.kind === 'high' ? 3.5 : (info.kind === 'low' || type === 'slider' ? 1.95 : 3.6);
   const lbl = sprite(info.tex, 2.4, 0.6); lbl.position.set(center * LANE, lblY, -s); seg.grp.add(lbl);
-  const half = type === 'cart' ? 0.75 : type === 'swing' ? 0.25 : 0.5;
+  const half = type === 'cart' ? 0.75 : type === 'desk' ? 0.6 : type === 'backpack' ? 0.55 : type === 'swing' ? 0.25 : 0.5;
   seg.obs.push({ type, s0: s - half, s1: s + half, lanes, kind: info.kind, h: info.h || 0, minor: !!info.minor, cx: center * LANE, ph: opt.phase || 0, mesh: g, lbl, hit: false, passed: false, t: 0 });
 }
 function addBooks(seg, s, lane, n, arcOver, gold, y0) {
@@ -2184,7 +2443,7 @@ function placeSlot(seg, s, diff, v) {
     const type = pick(DISTRACT), info = OBST[type];
     const nBlock = Math.random() < 0.35 + diff * 0.4 ? 2 : 1;
     const blocked = shuffle(LANES).slice(0, nBlock).sort((a, b) => a - b);
-    if (nBlock === 2 && blocked[1] - blocked[0] === 1 && info.kind === 'block' && type !== 'cart') row(seg, s, [{ type, lanes: blocked }]);
+    if (nBlock === 2 && blocked[1] - blocked[0] === 1 && info.kind === 'block' && type !== 'cart' && type !== 'desk' && type !== 'backpack') row(seg, s, [{ type, lanes: blocked }]);
     else row(seg, s, blocked.map(l => ({ type, lanes: [l] })));
     const free = LANES.filter(l => !blocked.includes(l));
     addBooks(seg, s - 8, pick(free), randi(6, 9));
@@ -2209,8 +2468,8 @@ function placeSlot(seg, s, diff, v) {
     return 1;
   }
   if (kind === 'slalom') {
-    const a = pick(LANES), b = nextLane(a), gap = v * 0.45 + 3.5, t = pick(['phone', 'cart', 'game', 'party']);
-    row(seg, s, [{ type: t, lanes: [a] }]); row(seg, s + gap, [{ type: pick(['phone', 'cart', 'game', 'party']), lanes: [b] }]);
+    const a = pick(LANES), b = nextLane(a), gap = v * 0.45 + 3.5, t = pick(WALL);
+    row(seg, s, [{ type: t, lanes: [a] }]); row(seg, s + gap, [{ type: pick(WALL), lanes: [b] }]);
     const f = LANES.find(l => l !== a && l !== b);
     addBooks(seg, s - 6, f, Math.round((gap + 10) / 2.1));
     return gap + 1;
@@ -2227,8 +2486,8 @@ function placeSlot(seg, s, diff, v) {
   if (kind === 'zig') {
     // two walls with a gap that moves one lane over
     const f1 = pick(LANES), f2 = nextLane(f1), gap = v * 0.5 + 4;
-    row(seg, s, LANES.filter(l => l !== f1).map(l => ({ type: pick(['phone', 'cart', 'game']), lanes: [l] })));
-    row(seg, s + gap, LANES.filter(l => l !== f2).map(l => ({ type: pick(['phone', 'cart', 'party']), lanes: [l] })));
+    row(seg, s, LANES.filter(l => l !== f1).map(l => ({ type: pick(WALL), lanes: [l] })));
+    row(seg, s + gap, LANES.filter(l => l !== f2).map(l => ({ type: pick(WALL), lanes: [l] })));
     addBooks(seg, s - 8, f1, 4); addBooks(seg, s + gap - 7, f2, 3);
     if (Math.random() < 0.35) addBooks(seg, s + gap + 4, f2, 1, null, true);
     return gap + 1;
@@ -2300,22 +2559,22 @@ function rebuildPlayer() { if (player) scene.remove(player); player = buildChara
 function menuP() { return { seg: segs[0], s: 9, lane: 0, lat: 0, latV: 0, y: 0, offset: new THREE.Vector3() }; }
 function newRun() {
   resetWorld();
-  const major = MAJORS[save.major], courses = major.c.length ? major.c : [['', 'Final']];
+  const major = MAJORS[save.major], year = curYear(), courses = major.c.length ? runCourses(major, year) : [['', 'Final', 1]];
   P = { seg: segs[0], s: 8, prevS: 8, lane: 0, lat: 0, latV: 0, y: 0, vy: 0, slide: 0, queuedSlide: false, yaw: 0, offset: new THREE.Vector3(), squash: 0, stumble: 0, roll: 0, airborne: false };
   run = { dist: 0, books: 0, cents: 0, speed: 13, chase: 3.2, chaseT: 3.0, stumbles: 0, slowT: 0, grace: 0, t: 0,
     p: { coffee: 0, focus: 0, shoes: 0, jet: 0, board: 0 }, boards: 2,
-    major, mode: save.mode, courses, courseStumbles: courses.map(() => 0), courseQuiz: courses.map(() => 0), combo: 0, comboT: 0, lastQuizT: -99, quizRight: 0, quizzes: 0, golds: 0, over: false, dying: 0, cause: null, wonT: 0, startTime: performance.now(), fTrail: 0 };
-  trail = []; camYaw = 0; turnFx.t = 1; bend = 0;
+    major, year, mode: save.mode, courses, learned: [], gateT: 0, gates: 0, gateRight: 0, courseStumbles: courses.map(() => 0), courseQuiz: courses.map(() => 0), combo: 0, comboT: 0, lastQuizT: -99, quizRight: 0, quizzes: 0, golds: 0, over: false, dying: 0, cause: null, wonT: 0, startTime: performance.now(), fTrail: 0 };
+  trail = []; camYaw = 0; turnFx.t = 1; bend = 0; gate = null; hideGate(true);
 }
 
 // =====================================================================
 //  HUD
 // =====================================================================
 const hud = { combo: $('#combo'), comboX: $('#comboX'), comboN: $('#comboN'), comboT: $('#comboT'), pts: $('#pts'), bar: $('#ptsBar'), books: $('#books'), mult: $('#mult'), cy: $('#courseYear'), cn: $('#courseName'), cbar: $('#courseBar'), toast: $('#toast'), turn: $('#turnHint'), pw: $('#powers'),
-  vig: $('#vignette'), aura: $('#aura'), fw: $('#fwarn'), flash: $('#flash'), score: $('#scoreBox'), boardBtn: $('#boardBtn'), boardCount: $('#boardCount') };
+  vig: $('#vignette'), aura: $('#aura'), fw: $('#fwarn'), flash: $('#flash'), score: $('#scoreBox'), boardBtn: $('#boardBtn'), boardCount: $('#boardCount'), sc: $('#hudScore'), le: $('#hudLearn'), live: $('#live') };
 const ARROW_R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 5l7 7-7 7" fill="none" stroke="#db445e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ARROW_L = ARROW_R.replace('M4 12h13M12 5l7 7-7 7', 'M20 12H7M12 5l-7 7 7 7');
-const courseText = c => c[0] ? c[0] + ' · ' + c[1] : c[1];
+const courseText = c => c[1];
 function toast(html, cls) {
   const d = document.createElement('div'); d.className = 'toast ' + (cls || ''); d.innerHTML = html; hud.toast.appendChild(d);
   while (hud.toast.children.length > 3) hud.toast.firstChild.remove();
@@ -2326,16 +2585,18 @@ let lastHud = '';
 function courseIndex() { return Math.min(run.courses.length - 1, Math.floor((run.cents / 10000) * run.courses.length)); }
 function updateHud() {
   const pts = (run.cents / 100).toFixed(2), N = run.courses.length, prog = run.cents / 10000, ci = courseIndex();
-  const year = Math.min(4, Math.floor(ci / N * (run.major.lvl === 'B' ? 4 : 2)) + 1);
+  const year = run.courses[ci][2] || run.year;
   const key = pts + '|' + ci + '|' + run.books;
   if (key !== lastHud) {
     lastHud = key;
     hud.pts.textContent = pts; hud.bar.style.width = (prog * 100).toFixed(2) + '%';
     hud.books.textContent = run.books.toLocaleString('en') + (run.books === 1 ? ' book' : ' books');
     hud.cy.textContent = `Year ${year} · course ${ci + 1}/${N}`;
-    hud.cn.innerHTML = (run.courses[ci][0] ? `<b>${run.courses[ci][0]}</b> · ` : '') + escapeHtml(run.courses[ci][1]);
+    hud.cn.textContent = run.courses[ci][1];
     hud.cbar.style.width = (((prog * N) - ci) * 100).toFixed(1) + '%';
   }
+  const sc = runScore(false).toLocaleString('en'); if (hud.sc.textContent !== sc) hud.sc.textContent = sc;
+  const le = String(run.learned.length); if (hud.le.textContent !== le) hud.le.textContent = le;
   hud.mult.hidden = !(run.p.board > 0);
   const cm = comboMult(run.combo);
   hud.combo.hidden = run.combo < 3;
@@ -2356,7 +2617,7 @@ function act(a) {
   const flying = run.p.jet > 0;
   if (a === 'left' || a === 'right') {
     const sgn = a === 'left' ? -1 : 1;
-    if (!tryTurn(sgn)) { const nl = clamp(P.lane + sgn, -1, 1); if (nl !== P.lane) { P.lane = nl; P.latV += sgn * 3; SFX.lane(); } else P.latV -= sgn * 4; }
+    const nl = clamp(P.lane + sgn, -1, 1); if (nl !== P.lane) { P.lane = nl; P.latV += sgn * 3; SFX.lane(); } else P.latV -= sgn * 4;
   } else if (a === 'up') {
     if (!flying && P.y <= 0.001) { const sup = run.p.shoes > 0; P.vy = sup ? 17.5 : 12.6; P.slide = 0; P.airborne = true; if (sup) { SFX.superJump(); burst(player.position, '#2681ba', 14, 5, 0.5, 0.45, 4); } else SFX.jump(); }
   } else if (a === 'down') {
@@ -2395,22 +2656,8 @@ host.addEventListener('pointerup', () => {
 host.addEventListener('pointercancel', () => { touch = null; });
 
 // =====================================================================
-//  TURNING & POWER-UPS
+//  POWER-UPS
 // =====================================================================
-function tryTurn(sgn) {
-  const seg = P.seg;
-  if (seg.turn !== sgn || P.s < seg.len - TURN_WIN) return false;
-  const next = segs[segs.indexOf(seg) + 1]; if (!next) return false;
-  const old = toWorld(seg, P.s, P.lat, 0, tmp.clone());
-  // the old lateral offset becomes the distance along the new path; keep the lane
-  P.seg = next; P.s = P.prevS = Math.max(0.5, sgn > 0 ? P.lat : -P.lat) + 0.5; P.lat = P.lane * LANE;
-  turnFx.t = 0; turnFx.from = camYaw;
-  const nw = toWorld(next, P.s, P.lat, 0, tmp2);
-  P.offset.set(old.x - nw.x, 0, old.z - nw.z);
-  SFX.turn(); shake = Math.max(shake, 0.12);
-  burst(tmp3.copy(player.position).setY(0.3), ['#e8eef2', '#ffffff', '#db445e'], 16, 5, 0.45, 0.45, 3);
-  return true;
-}
 function activatePower(kind) {
   const P0 = POWERS[kind];
   run.p[kind] = P0.time; SFX.power();
@@ -2490,11 +2737,13 @@ function nearMiss(ob, sliding) {
 function die(reason, label) {
   if (run.over) return;
   run.over = true; run.dying = 0.001; run.cause = { reason, label };
-  state = 'dying'; SFX.fail(); sirenOn(false); musicOn(false); hud.turn.hidden = true; shake = 0.8;
+  hideGate(true); gate = null;
+  state = 'dying'; SFX.fail(); sirenOn(false); musicOn(false); shake = 0.8;
 }
 function win() {
   if (run.over) return;
-  run.over = true; run.wonT = 0.001; state = 'won'; SFX.win(); sirenOn(false); musicOn(false); spawnConfetti(); hud.turn.hidden = true;
+  hideGate(true); gate = null;
+  run.over = true; run.wonT = 0.001; state = 'won'; SFX.win(); sirenOn(false); musicOn(false); spawnConfetti();
   for (const k in run.p) run.p[k] = 0;
   flash(0.6, '#db445e');
 }
@@ -2541,15 +2790,11 @@ function update(dt) {
     R.chaseT = Math.max(0, R.chaseT - dt); R.grace = Math.max(0, R.grace - dt);
     if (R.combo > 0) { R.comboT -= dt; if (R.comboT <= 0) { if (R.combo >= 10) toast(`Combo ended at ${R.combo}`, ''); R.combo = 0; } }
     if (R.p.focus > 0) R.chaseT = 0;
-    const seg = P.seg, toCorner = seg.len - P.s;
-    if (flying && toCorner < 1.5) tryTurn(seg.turn);
-    // bend the road toward the turn as the corner approaches, straighten after it
-    const bendT = flying ? 0 : seg.turn * 0.0011 * clamp((70 - toCorner) / 45, 0, 1);
-    bend = damp(bend, bendT, 2.5, dt);
-    hud.turn.classList.toggle('now', toCorner < TURN_WIN + 2);
-    if (toCorner < 38 && !flying) { hud.turn.hidden = false; const html = seg.turn < 0 ? ARROW_L : ARROW_R; if (hud.turn.innerHTML !== html) { hud.turn.innerHTML = html; hud.turn.setAttribute('aria-label', seg.turn < 0 ? 'Turn left' : 'Turn right'); } }
-    else hud.turn.hidden = true;
-    if (P.s > seg.len + TURN_OVER) die('You missed the turn and ran into a building', 'Lost your way');
+    // straight track: step onto the next stretch of the boulevard
+    if (P.s >= P.seg.len) { const old = P.seg, ni = segs.indexOf(old) + 1; if (ni >= segs.length) addSegment(); P.seg = segs[ni]; P.s -= old.len; P.prevS -= old.len; }
+    // a quiz gate every half minute or so (not while flying, nor right after a checkpoint quiz)
+    if (!gate && !flying && R.t > 14 && R.t - R.gateT > 30 && R.t - R.lastQuizT > 8 && R.cents < 9700 && R.courses.length) spawnGate();
+    updateGate(dt);
     // obstacles (swept from last frame's position, so nothing is skipped at top speed)
     const sliding = P.slide > 0 && P.y < 0.3, s0 = Math.min(P.prevS, P.s);
     if (!flying) for (const ob of P.seg.obs) {
@@ -2667,7 +2912,7 @@ function coursePassed(before, noQuiz) {
   burst(tmp2.copy(player.position).setY(2), ['#db445e', '#2681ba', '#ffffff'], 30, 8, 0.8, 0.55, 4, sparkTex);
   const seg = P.seg, gs = P.s + 50;
   if (gs < seg.len - 12) {
-    entranceArch(seg.grp, gs, nxt[0] || 'Next course', nxt[1]);
+    entranceArch(seg.grp, gs, `Year ${nxt[2] || run.year} course`, nxt[1]);
     // a moving hazard guards the next course's gate
     const ds = gs + 10, gap = reactGap(run.speed * 1.15);
     if (ds < seg.len - 52 && rangeFree(seg, ds - gap, ds + gap)) addObstacle(seg, Math.random() < 0.5 ? 'swing' : 'slider', ds, LANES, { phase: rand(0, Math.PI * 2) });
@@ -2681,8 +2926,9 @@ let quiz = null;
 // a concept question about what the course teaches, drawn from the topic bank (no course codes)
 const qMatch = re => QBANK.filter(e => new RegExp(e[0], 'i').test(re)).flatMap(e => e.slice(1));
 function makeQuestion(ci) {
-  const c = run.courses[ci], asked = run.asked || (run.asked = new Set());
-  let pool = qMatch(c[1]), tag = `Course final · ${c[1]}`;
+  // mostly the course you are in, sometimes another subject from your year window (this year or the one before)
+  const c = Math.random() < 0.55 ? run.courses[ci] : pick(run.courses), asked = run.asked || (run.asked = new Set());
+  let pool = qMatch(c[1]), tag = `Year ${c[2] || run.year} · ${c[1]}`;
   if (!pool.some(q => !asked.has(q[0]))) {
     const k = Object.keys(QSCHOOL).find(k => run.major.school.includes(k));
     pool = k ? QBANK.filter(e => new RegExp(QSCHOOL[k], 'i').test(e[0])).flatMap(e => e.slice(1)) : [];
@@ -2696,10 +2942,17 @@ function makeQuestion(ci) {
 function startQuiz(ci) {
   const Q = makeQuestion(ci); if (!Q) return;
   run.lastQuizT = run.t; run.quizzes++;
-  const opts = [Q.right, ...Q.wrong].sort(() => Math.random() - 0.5);
-  quiz = { ci, Q, opts, t0: performance.now(), dur: 12000, done: false };
+  // two formats: multiple choice, or a quick true/false on a proposed answer
+  const tf = Math.random() < 0.35;
+  let opts, html;
+  if (tf) {
+    const truth = Math.random() < 0.5, shown = truth ? Q.right : pick(Q.wrong);
+    Q.trueAns = Q.right; Q.right = truth ? 'True' : 'False'; Q.shown = shown; opts = ['True', 'False'];
+    html = `${escapeHtml(Q.q)}<span class="tf">Answer: “${escapeHtml(shown)}”</span>`;
+  } else { opts = [Q.right, ...Q.wrong].sort(() => Math.random() - 0.5); html = escapeHtml(Q.q); }
+  quiz = { ci, Q, opts, tf, t0: performance.now(), dur: tf ? 9000 : 12000, done: false };
   state = 'quiz'; sirenOn(false); show('quiz'); $('#hud').hidden = false;
-  $('#quizTag').textContent = Q.tag; $('#quizQ').textContent = Q.q;
+  $('#quizTag').textContent = (tf ? 'True or false · ' : 'Checkpoint quiz · ') + Q.tag; $('#quizQ').innerHTML = html;
   $('#quizOpts').innerHTML = opts.map((o, i) => `<button data-i="${i}"><kbd>${i + 1}</kbd><span>${escapeHtml(o)}</span></button>`).join('');
   $('#quizOpts').querySelectorAll('button').forEach(b => b.onclick = () => answerQuiz(+b.dataset.i));
   SFX.quiz(); tickQuiz();
@@ -2711,19 +2964,121 @@ function tickQuiz() {
   if (left <= 0) answerQuiz(-1); else requestAnimationFrame(tickQuiz);
 }
 function answerQuiz(i) {
-  if (!quiz || quiz.done) return;
-  quiz.done = true;
+  if (!quiz || quiz.done || i >= quiz.opts.length) return;
+  quiz.done = true; const quiz0 = quiz;
   const ok = i >= 0 && quiz.opts[i] === quiz.Q.right, before = courseIndex(), btns = $('#quizOpts').querySelectorAll('button');
   btns.forEach((b, k) => { if (quiz.opts[k] === quiz.Q.right) b.classList.add('right'); else if (k === i) b.classList.add('wrong'); });
   run.courseQuiz[quiz.ci] = ok ? 1 : -1;
-  if (ok) { run.quizRight++; run.cents = Math.min(10000, run.cents + 500); SFX.win(); } else SFX.hit();
+  if (ok) { run.quizRight++; learn(quiz.Q, quiz.tf ? quiz.Q.trueAns : quiz.Q.right); run.cents = Math.min(10000, run.cents + 500); SFX.win(); } else SFX.hit();
   setTimeout(() => {
     if (state !== 'quiz') return;
     state = 'play'; show(null); $('#hud').hidden = false; quiz = null;
     run.grace = 1.2; run.chaseT = 0; musicOn(true);
     if (ok) { toast('Correct! +5.00 points', 'good'); popup(tmp2.copy(player.position).setY(player.position.y + 2.8), '+5.00', 'big', true); coursePassed(before, true); }
-    else toast(`Not quite<small>${escapeHtml(i < 0 ? 'Time is up. ' : '')}The answer was ${escapeHtml(btns.length ? $('#quizOpts .right span').textContent : '')}</small>`, 'bad');
+    else toast(`Not quite<small>${escapeHtml(i < 0 ? 'Time is up. ' : '')}${quiz0.tf ? (quiz0.Q.right === 'True' ? 'It was true: ' : 'It was false. Correct: ') + escapeHtml(quiz0.Q.right === 'True' ? quiz0.Q.shown : quiz0.Q.trueAns) : 'The answer was ' + escapeHtml(btns.length ? $('#quizOpts .right span').textContent : '')}</small>`, 'bad');
   }, ok ? 900 : 1500);
+}
+
+// every right answer is something the student now knows: kept per run and in the profile
+function learn(Q, answer) {
+  if (run.learned.some(x => x.q === Q.q)) return;
+  run.learned.push({ q: Q.q, a: answer, tag: Q.tag });
+  popup(tmp2.copy(player.position).setY(player.position.y + 3.4), '🧠 +1 learned', 'x2', true);
+}
+const learnedHtml = () => run.learned.length ? `<h4>🧠 What you learned this run (${run.learned.length})</h4>` + run.learned.slice(-8).map(x => `<div>${escapeHtml(x.q)} <b>${escapeHtml(x.a)}</b></div>`).join('') : '';
+
+// ---------- v6: quiz gates: answer in the run by choosing a lane ----------
+let gate = null, gateHideT = 0;
+const GATE_COL = ['#2681ba', '#123947', '#c82641'];
+function wrapLines(g, text, maxW) {
+  const words = String(text).split(/\s+/), lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines;
+}
+function optionTex(text, letter, col) {
+  return canvasTex(512, 280, (g, w, h) => {
+    g.fillStyle = col; rr(g, 0, 0, w, h, 34); g.fill();
+    g.fillStyle = '#ffffff'; rr(g, 10, 10, w - 20, h - 20, 26); g.fill();
+    g.fillStyle = col; g.beginPath(); g.arc(56, 58, 34, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fff'; g.font = `900 38px ${DFONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(letter, 56, 60);
+    let size = 46, lines;
+    for (; size >= 24; size -= 2) { g.font = `800 ${size}px ${FONT}`; lines = wrapLines(g, text, w - 60); if (lines.length * size * 1.15 <= h - 110 && lines.length <= 4) break; }
+    if (lines.length > 4) { lines = lines.slice(0, 4); lines[3] += '…'; }
+    g.fillStyle = '#10364e'; const y0 = 100 + (h - 110 - lines.length * size * 1.15) / 2 + size * 0.55;
+    lines.forEach((l, i) => g.fillText(l, w / 2, y0 + i * size * 1.15));
+  });
+}
+function hideGate(now) { const el = $('#gateQ'); if (now) { el.hidden = true; el.className = ''; gateHideT = 0; } else gateHideT = 1.6; }
+function clearRange(seg, a, b) { for (const o of seg.obs) if (o.s1 > a && o.s0 < b) { o.hit = true; o.mesh.visible = false; o.lbl.visible = false; } }
+function spawnGate() {
+  const ci = courseIndex(), Q = makeQuestion(ci), tf = Math.random() < 0.35;
+  let labels, right, text;
+  if (tf) {
+    const truth = Math.random() < 0.5, shown = truth ? Q.right : pick(Q.wrong);
+    labels = ['TRUE', 'Not sure', 'FALSE']; right = truth ? -1 : 1; Q.trueAns = Q.right;
+    text = `${Q.q} → “${shown}”`;
+  } else {
+    labels = [Q.right, ...Q.wrong].sort(() => Math.random() - 0.5); right = labels.indexOf(Q.right) - 1; text = Q.q;
+  }
+  // far enough ahead to read the question and pick a lane
+  let seg = P.seg, s = P.s + Math.max(60, run.speed * 4.6);
+  while (s > seg.len - 3) { const ni = segs.indexOf(seg) + 1; if (ni >= segs.length) addSegment(); s -= seg.len; seg = segs[ni]; }
+  s = Math.max(s, 6);
+  clearRange(seg, s - 24, s + 8);
+  const pi = segs.indexOf(seg) - 1; if (s < 24 && pi >= 0) clearRange(segs[pi], segs[pi].len + s - 24, segs[pi].len + 1);
+  const grp = new THREE.Group(); grp.position.z = -s; seg.grp.add(grp);
+  const navy = M('#10364e'), red = M('#c82641', { emissive: 0x3e0c14 });
+  [-1, 1].forEach(k => { grp.add(mesh(GEO.box, navy, 0.4, 5.0, 0.4, k * (HALFW + 0.35), 2.5, 0)); grp.add(mesh(GEO.box, red, 0.46, 0.14, 0.46, k * (HALFW + 0.35), 4.2, 0)); });
+  grp.add(mesh(GEO.box, navy, HALFW * 2 + 1.1, 0.55, 0.4, 0, 4.85, 0));
+  const head = new THREE.Mesh(GEO.plane, new THREE.MeshBasicMaterial({ map: labelTex('QUIZ GATE', '#c82641', '#ffffff') })); head.scale.set(3.2, 0.8, 1); head.position.set(0, 4.85, 0.22); grp.add(head);
+  const panels = [];
+  [-1, 0, 1].forEach((lane, i) => {
+    const col = tf ? (lane < 0 ? '#2681ba' : lane > 0 ? '#c82641' : '#6b7c88') : GATE_COL[i];
+    const tex = optionTex(labels[i], tf ? (lane < 0 ? 'T' : lane > 0 ? 'F' : '?') : 'ABC'[i], col);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+    const p = new THREE.Mesh(GEO.plane, mat); p.scale.set(2.1, 1.15, 1); p.position.set(lane * LANE, 3.35, 0.05); grp.add(p);
+    grp.add(mesh(GEO.box, navy, 0.06, 0.6, 0.06, lane * LANE, 4.35, 0));
+    // a glowing lane strip leading into each answer
+    const sm = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    const strip = new THREE.Mesh(GEO.plane, sm); strip.rotation.x = -Math.PI / 2; strip.scale.set(1.7, 10, 1); strip.position.set(lane * LANE, 0.03, 5); grp.add(strip);
+    seg.disposables.push(tex, mat, sm, head.material, head.material.map);
+    panels.push({ lane, mat, sm });
+  });
+  seg.anims.push(() => { if (gate && gate.grp === grp && !gate.done) panels.forEach((p, i) => { p.sm.opacity = 0.25 + 0.2 * Math.max(0, Math.sin(clock * 6 - i)); }); });
+  gate = { seg, s, grp, right, tf, Q, labels, panels, done: false };
+  run.gates++; run.gateT = run.t;
+  const el = $('#gateQ'); el.className = ''; el.hidden = false; gateHideT = 0;
+  $('#gateTag').textContent = (tf ? 'Quiz gate · true or false · ' : 'Quiz gate · ') + Q.tag;
+  $('#gateText').textContent = text;
+  // the three answers, laid out like the lanes (left, middle, right)
+  $('#gateHint').innerHTML = `<div class="gopts">${labels.map((l, i) => `<span style="--c:${tf ? ['#2681ba', '#6b7c88', '#c82641'][i] : GATE_COL[i]}"><b>${tf ? ['T', '?', 'F'][i] : 'ABC'[i]}</b>${escapeHtml(l)}</span>`).join('')}</div>${tf ? 'Left lane = true · right lane = false' : 'Run through the lane with the right answer'}`;
+  SFX.quiz();
+}
+function updateGate(dt) {
+  if (gateHideT > 0) { gateHideT -= dt; if (gateHideT <= 0) hideGate(true); }
+  if (!gate || gate.done) return;
+  const gi = segs.indexOf(gate.seg), pi = segs.indexOf(P.seg);
+  if (gi < 0) { gate = null; hideGate(true); return; }
+  if (!(pi > gi || (pi === gi && P.s >= gate.s))) return;
+  gate.done = true;
+  const lane = Math.round(clamp(P.lat / LANE, -1, 1)), before = courseIndex(), el = $('#gateQ');
+  const rightText = gate.tf ? (gate.right < 0 ? 'True' : 'False. Correct: ' + gate.Q.trueAns) : gate.labels[gate.right + 1];
+  gate.panels.forEach(p => { if (p.lane === gate.right) { p.sm.color.set('#2681ba'); p.sm.opacity = 0.7; } else p.mat.opacity = 0.35; });
+  if (gate.tf && lane === 0) { toast(`Skipped<small>It was ${escapeHtml(rightText)}</small>`, ''); el.className = ''; }
+  else if (lane === gate.right) {
+    run.gateRight++; run.quizRight++; learn(gate.Q, gate.Q.right); run.cents = Math.min(10000, run.cents + 200);
+    SFX.course(); flash(0.25, '#2681ba'); el.className = 'ok';
+    popup(tmp2.copy(player.position).setY(player.position.y + 2.8), '+2.00', 'big', true);
+    burst(tmp3.copy(player.position).setY(2), ['#2681ba', '#ffffff', '#db445e'], 30, 8, 0.8, 0.55, 4, sparkTex);
+    toast('Right answer! +2.00 points', 'good');
+    coursePassed(before, true);
+  } else {
+    run.combo = 0; SFX.hit(); shake = Math.max(shake, 0.25); el.className = 'bad';
+    toast(`Wrong gate<small>The answer was ${escapeHtml(rightText)}</small>`, 'bad');
+  }
+  run.quizzes++;
+  $('#gateHint').textContent = el.className === 'ok' ? '✓ Correct' : 'Answer: ' + rightText;
+  hideGate(false); gate = null;
 }
 
 // confetti (real paper pieces)
@@ -2753,6 +3108,7 @@ function updateSky(dt) {
 //  ACTORS & CAMERA (spring follow, lag on turns, roll, FOV kick)
 // =====================================================================
 let fSide = 0;
+const CAM = { dist: 7.2, height: 4.7, ahead: 9, lookH: 0.5 };
 const fPos = new THREE.Vector3(), camTarget = new THREE.Vector3(), lookTarget = new THREE.Vector3();
 function placeActors(dt) {
   const seg = P.seg, R = run, flying = R.p.jet > 0;
@@ -2798,12 +3154,11 @@ function placeActors(dt) {
   // corner swing: an eased yaw tween, pulled in closer and higher so the camera never cuts through buildings
   if (turnFx.t < 1) turnFx.t = Math.min(1, turnFx.t + dt / 0.42);
   const swing = turnFx.t < 1 ? Math.sin(Math.PI * turnFx.t) : 0;
-  let yawT = segYaw, dist = 5.2 * (1 - 0.32 * swing), height = 2.95 + 0.55 * swing, lookAhead = 5.5, lookH = 1.25;
-  // peek a little toward a coming turn so the corner opens up before you reach it
-  if (state === 'play' && !flying) yawT += seg.turn * 0.075 * clamp((34 - (seg.len - P.s)) / 26, 0, 1);
-  if (R.chaseT > 0 && state === 'play') height += 0.45;
-  if (P.slide > 0 && P.y < 0.3) { height -= 0.75; lookH -= 0.25; }
-  if (flying) { dist = 7.5; height = 3.6; }
+  // v6: higher, further back and tilted down so the runner, all three lanes and the obstacles ahead stay in view
+  let yawT = segYaw, dist = CAM.dist, height = CAM.height, lookAhead = CAM.ahead, lookH = CAM.lookH;
+  if (R.chaseT > 0 && state === 'play') height += 0.3;
+  if (P.slide > 0 && P.y < 0.3) { height -= 0.35; }
+  if (flying) { dist = CAM.dist + 1.2; height = CAM.height - 0.4; }
   if (state === 'dying') { yawT = segYaw + Math.PI * 0.8; dist = 6.5; height = 2.6; lookAhead = 0; lookH = 1.5; }
   if (state === 'won' && R.wonT > 0.6) { yawT = segYaw + Math.PI; dist = 4.6; height = 1.9; lookAhead = 0; lookH = 1.2; }
   const prevYaw = camYaw;
@@ -2877,6 +3232,7 @@ addEventListener('resize', resize);
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   update(dt);
+  Live.tick(dt);
   BEND.value = state === 'menu' ? 0 : bend;
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -2885,7 +3241,7 @@ function frame(now) {
 // =====================================================================
 //  SCREENS
 // =====================================================================
-const screens = ['title', 'custom', 'majors', 'pause', 'quiz', 'over', 'won'];
+const screens = ['title', 'login', 'board', 'share', 'custom', 'majors', 'pause', 'quiz', 'over', 'won'];
 function show(name) {
   screens.forEach(s => $('#' + s).hidden = s !== name);
   screen = name;
@@ -2893,10 +3249,12 @@ function show(name) {
   applyViewOffset();
 }
 function toMenu(which) {
+  hideGate(true); gate = null;
   state = 'menu'; clearConfetti(); hud.vig.style.opacity = '0'; hud.aura.style.opacity = '0'; sirenOn(false); musicOn(false);
   resetWorld(); P = menuP(); popsEl.innerHTML = '';
   show(which || 'title'); refreshTitle();
   if (which === 'majors') { mjLevel = MAJORS[save.major].lvl; buildMajors(); }
+  if (which === 'board') openBoard();
 }
 function startGame() {
   quiz = null; audioInit(); clearConfetti(); rebuildPlayer(); newRun();
@@ -2911,7 +3269,30 @@ function pauseGame() { if (state !== 'play') return; state = 'paused'; sirenOn(f
 function resumeGame() { if (state !== 'paused') return; state = 'play'; show(null); $('#hud').hidden = false; last = performance.now(); musicOn(true); }
 const statRows = rows => rows.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
 const fmtTime = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-function recordBest() { const prev = save.best[run.mode] || 0; if (run.cents > prev) { save.best[run.mode] = run.cents; persist(); return true; } return false; }
+// run score for the leaderboard: the same for every mode (distance, books and right answers, plus a bonus for graduating)
+function runScore(won) { return Math.round(run.dist) + run.books * 5 + run.quizRight * 250 + (won ? 2500 : 0); }
+function recordBest(won) {
+  if (run.recorded) return run.recorded.isBest;
+  const prev = save.best[run.mode] || 0, isBest = run.cents > prev;
+  if (isBest) save.best[run.mode] = run.cents;
+  const score = runScore(won), p = activeProfile();
+  run.recorded = { isBest, score, bestScore: score };
+  if (p) {
+    p.runs = (p.runs || 0) + 1; p.books = (p.books || 0) + run.books; p.quizRight = (p.quizRight || 0) + run.quizRight; p.quizTotal = (p.quizTotal || 0) + run.quizzes;
+    if (won) p.wins = (p.wins || 0) + 1;
+    p.best = p.best || {}; if (run.cents > (p.best[run.mode] || 0)) p.best[run.mode] = run.cents;
+    p.bestDist = Math.max(p.bestDist || 0, Math.round(run.dist));
+    run.recorded.newHigh = score > (p.bestScore || 0);
+    p.bestScore = Math.max(p.bestScore || 0, score); p.last = Date.now();
+    const known = new Set(p.learnedQs || []); run.learned.forEach(x => known.add(x.q));
+    run.recorded.newLearned = known.size - (p.learnedQs || []).length;
+    p.learnedQs = [...known].slice(-2000); p.learned = known.size;
+    run.recorded.bestScore = p.bestScore;
+    Store.submit({ name: p.name, major: shortMajor(MAJORS[p.major] || run.major), year: p.year, score: p.bestScore, dist: p.bestDist, books: p.books, learned: p.learned || 0, at: Date.now() });
+  }
+  persist();
+  return isBest;
+}
 const GRADES = [['A', 4.0], ['A-', 3.7], ['B+', 3.3], ['B', 3.0]];
 function transcript(passed, failedIdx) {
   let sum = 0, n = 0;
@@ -2919,39 +3300,49 @@ function transcript(passed, failedIdx) {
     let cls = 'todo', mark = '○', g = '—';
     if (i < passed) { const gr = GRADES[clamp(run.courseStumbles[i] - (run.courseQuiz[i] > 0 ? 1 : 0) + (run.courseQuiz[i] < 0 ? 1 : 0), 0, 3)]; cls = 'ok'; mark = '✓'; g = gr[0]; sum += gr[1]; n++; }
     else if (i === failedIdx) { cls = 'bad'; mark = '✗'; g = 'F'; n++; }
-    return `<div class="${cls}"><span>${mark}</span><span class="code">${escapeHtml(c[0] || '—')}</span><span class="t">${escapeHtml(c[1])}</span><span class="g">${g}</span></div>`;
+    return `<div class="${cls}"><span>${mark}</span><span class="code">Y${c[2] || run.year}</span><span class="t">${escapeHtml(c[1])}</span><span class="g">${g}</span></div>`;
   }).join('');
   return { rows, gpa: n ? sum / n : 0 };
 }
 function showOver() {
   const N = run.courses.length, ci = courseIndex(), c = run.courses[ci];
-  const isBest = recordBest(), tr = transcript(ci, ci);
-  $('#overSub').textContent = `${shortMajor(run.major)} · ${MODES[run.mode].name}`;
+  const isBest = recordBest(false), tr = transcript(ci, ci);
+  $('#overSub').textContent = `${shortMajor(run.major)} · Year ${run.year}`;
   $('#overReason').innerHTML = `${escapeHtml(run.cause.label)}: ${escapeHtml(run.cause.reason)}.<small>You got an F in ${escapeHtml(courseText(c))}.</small>`;
   $('#overGpa').innerHTML = `<b>${tr.gpa.toFixed(2)}</b><div>GPA<small>${ci} of ${N} courses passed</small></div>`;
   $('#overTranscript').innerHTML = tr.rows;
-  $('#overStats').innerHTML = statRows([['Points', (run.cents / 100).toFixed(2) + ' / 100'], ['Books', run.books.toLocaleString('en')], ['Distance', Math.round(run.dist).toLocaleString('en') + ' m'], [isBest ? 'New best!' : 'Best', ((save.best[run.mode] || 0) / 100).toFixed(2)]]);
+  $('#overLearned').innerHTML = learnedHtml();
+  $('#overStats').innerHTML = statRows([['Points', (run.cents / 100).toFixed(2) + ' / 100'], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Distance', Math.round(run.dist).toLocaleString('en') + ' m'], ['Learned', `${run.learned.length} this run · ${(activeProfile() && activeProfile().learned) || run.learned.length} total`], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], [isBest ? 'New best!' : 'Best points', ((save.best[run.mode] || 0) / 100).toFixed(2)]]);
   show('over');
   setTimeout(() => { const el = $('#overTranscript .bad'), box = $('#overTranscript'); if (el) box.scrollTop = el.offsetTop - box.clientHeight / 2; }, 60);
 }
 function showWon() {
-  recordBest();
+  recordBest(true);
   const tr = transcript(run.courses.length, -1);
-  $('#wonName').textContent = cfg.name || 'ADA Student';
-  $('#wonWhat').textContent = run.major.en;
+  $('#wonName').textContent = (activeProfile() && activeProfile().name) || cfg.name || 'ADA Student';
+  $('#wonWhat').textContent = `${run.major.en} · Year ${run.year}`;
   $('#wonDate').textContent = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
   $('#wonSeal').innerHTML = 'GPA<br>' + tr.gpa.toFixed(2);
   $('#wonGpa').innerHTML = `<b>${tr.gpa.toFixed(2)}</b><div>GPA<small>All ${run.courses.length} courses passed${tr.gpa >= 3.5 ? ' · with honors' : ''}</small></div>`;
   $('#wonTranscript').innerHTML = tr.rows;
-  $('#wonStats').innerHTML = statRows([['Mode', MODES[run.mode].name], ['Books', run.books.toLocaleString('en')], ['Time', fmtTime(performance.now() - run.startTime)], ['Hits', run.stumbles]]);
+  $('#wonLearned').innerHTML = learnedHtml();
+  $('#wonStats').innerHTML = statRows([['Learned', `${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}`], [run.recorded.newHigh ? 'Score · new high!' : 'Score', run.recorded.score.toLocaleString('en')], ['Books', run.books.toLocaleString('en')], ['Time', fmtTime(performance.now() - run.startTime)], ['Quiz answers', `${run.quizRight} / ${run.quizzes} right`], ['Hits', run.stumbles]]);
   show('won');
 }
+const initials = n => (String(n).trim().split(/\s+/).map(w => w[0] || '').join('').slice(0, 2) || '?').toUpperCase();
 function refreshTitle() {
-  const m = MAJORS[save.major];
-  $('#titleInfo').innerHTML = `<b>${escapeHtml(shortMajor(m))}</b> · ${MODES[save.mode].name}${save.best[save.mode] ? ' · best ' + (save.best[save.mode] / 100).toFixed(2) : ''}`;
+  const m = MAJORS[save.major], p = activeProfile(), chip = $('#profileChip');
+  if (p) {
+    chip.innerHTML = `<div class="av">${escapeHtml(initials(p.name))}</div><div class="who"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(shortMajor(m))} · Year ${curYear()}${p.bestScore ? ' · best score ' + p.bestScore.toLocaleString('en') : ''}${p.learned ? ' · 🧠 ' + p.learned + ' learned' : ''}</small></div><button id="switchBtn">Switch</button>`;
+    $('#switchBtn').onclick = () => openLogin();
+  } else {
+    chip.innerHTML = `<div class="av">?</div><div class="who"><b>Not signed in</b><small>Sign in to save your progress and join the leaderboard</small></div><button id="switchBtn">Sign in</button>`;
+    $('#switchBtn').onclick = () => openLogin();
+  }
+  $('#titleInfo').innerHTML = save.best[save.mode] ? `Best ${(save.best[save.mode] / 100).toFixed(2)} / 100 points` : '0.10 points per book · 100 points to graduate';
   $('#howto').innerHTML = isTouch
-    ? '<b>Swipe</b> left/right: lanes and turns · <b>up</b>: jump · <b>down</b>: slide · <b>double-tap</b>: hoverboard'
-    : '<b>← →</b> lanes and turns · <b>↑ / Space</b>: jump · <b>↓ / Shift</b>: slide · <b>E</b>: hoverboard · <b>P</b>: pause';
+    ? '<b>Swipe</b> left/right: change lane · <b>up</b>: jump · <b>down</b>: slide · <b>double-tap</b>: hoverboard'
+    : '<b>← →</b> change lane · <b>↑ / Space</b>: jump · <b>↓ / Shift</b>: slide · <b>E</b>: hoverboard · <b>P</b>: pause';
 }
 function drawLogoMark() { const c = $('#logoMark'); if (!c) return; const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); drawAdaLogo(g, c.width / 2, 120, 1.0, { crimson: '#df556c', teal: '#ffffff' }); }
 
@@ -2977,7 +3368,7 @@ function buildCustom() {
   OPTS.acc.forEach(([v, label]) => { const b = document.createElement('button'); b.className = 'opt'; b.textContent = label; b.setAttribute('aria-pressed', cfg.acc.includes(v)); b.onclick = () => { cfg.acc = cfg.acc.includes(v) ? cfg.acc.filter(x => x !== v) : cfg.acc.concat(v); changed(); }; acc.appendChild(b); });
   grp('Accessories', acc);
 }
-function saveCfg() { save.cfg = cfg; persist(); }
+function saveCfg() { save.cfg = cfg; const p = activeProfile(); if (p) { p.cfg = cfg; if (cfg.name) p.name = cfg.name; } persist(); }
 function changed() { const st = $('#customBody').scrollTop; saveCfg(); rebuildPlayer(); buildCustom(); $('#customBody').scrollTop = st; audioInit(); SFX.ui(); }
 
 // majors panel
@@ -2992,31 +3383,245 @@ function buildMajors() {
     bySchool[sch].forEach(([m, i]) => {
       const b = document.createElement('button'); b.className = 'prog'; b.setAttribute('aria-pressed', save.major === i);
       b.innerHTML = `<span class="az">${escapeHtml(shortMajor(m))}</span><span class="en">${escapeHtml(m.en)} · ${m.c.length} courses</span>`;
-      if (save.major === i) { const cs = document.createElement('div'); cs.className = 'courses'; cs.innerHTML = m.c.map(c => `<span>${c[0] ? '<b>' + c[0] + '</b>' : ''}${escapeHtml(c[1])}</span>`).join(''); b.appendChild(cs); }
-      b.onclick = () => { save.major = i; persist(); const st = list.scrollTop; buildMajors(); list.scrollTop = st; };
+      if (save.major === i) { const cs = document.createElement('div'); cs.className = 'courses'; const y = curYear(), lo = Math.min(...runCourses(m, y).map(c => c[2])); cs.innerHTML = m.c.map((c, k) => { const cy = courseYearOf(m, k), on = cy >= lo && cy <= y; return `<span style="${on ? '' : 'opacity:.4'}"><b>Y${cy}</b>${escapeHtml(c[1])}</span>`; }).join(''); b.appendChild(cs); }
+      b.onclick = () => { save.major = i; const p = activeProfile(); if (p) { p.major = i; p.year = clampN(p.year, 1, yearsOf(m)); } persist(); const st = list.scrollTop; buildMajors(); list.scrollTop = st; };
       sec.appendChild(b);
     });
     list.appendChild(sec);
   }
-  const modes = $('#modes'); modes.innerHTML = '';
-  for (const k in MODES) {
-    const b = document.createElement('button'); b.className = 'mode'; b.setAttribute('aria-pressed', save.mode === k);
-    b.innerHTML = `<b>${MODES[k].name}</b><small>${MODES[k].desc}</small>`;
-    b.onclick = () => { save.mode = k; persist(); buildMajors(); };
-    modes.appendChild(b);
-  }
+  const yb = $('#mjYear'), Y = yearsOf(MAJORS[save.major]), cy = curYear(); yb.innerHTML = '';
+  for (let y = 1; y <= Y; y++) { const b = document.createElement('button'); b.className = 'opt'; b.textContent = 'Year ' + y; b.setAttribute('aria-pressed', y === cy); b.onclick = () => { const p = activeProfile(); if (p) p.year = y; save.year = y; persist(); const st = $('#mjList').scrollTop; buildMajors(); $('#mjList').scrollTop = st; }; yb.appendChild(b); }
+  $('#mjYearNote').textContent = cy > 1 ? `· quizzes cover Year ${Math.min(...runCourses(MAJORS[save.major], cy).map(c => c[2]))}–${cy}` : '· quizzes cover Year 1';
 }
+// ---------- v6.1: live online race (everyone who has the game link open right now) ----------
+const HEX = /^#[0-9a-f]{6}$/i, optOk = (k, v) => OPTS[k].some(o => o[0] === v);
+function peerInfo(p) {
+  const s = p.presence || {}, num = (v, a, b) => { v = +v; return isFinite(v) ? Math.max(a, Math.min(b, v)) : 0; }, str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  const c = s.c && typeof s.c === 'object' ? s.c : {}, g = c.g === 'boy' ? 'boy' : 'girl', d0 = DEF[g];
+  const look = { gender: g, skin: HEX.test(c.sk) ? c.sk : d0.skin, hair: optOk('hair', c.h) ? c.h : d0.hair, hairColor: HEX.test(c.hc) ? c.hc : d0.hairColor, top: optOk('top', c.t) ? c.t : d0.top, topColor: HEX.test(c.tc) ? c.tc : d0.topColor, bottom: optOk('bottom', c.b) ? c.b : d0.bottom, bottomColor: HEX.test(c.bc) ? c.bc : d0.bottomColor, shoes: HEX.test(c.sh) ? c.sh : d0.shoes, acc: ['bag'], name: '' };
+  return { id: p.peer, name: str(s.n, 28) || 'ADA student', mj: str(s.mj, 60), yr: Math.round(num(s.yr, 0, 4)), st: ['menu', 'run', 'out', 'won'].includes(s.st) ? s.st : 'menu', d: Math.round(num(s.d, 0, 1e7)), sc: Math.round(num(s.sc, 0, 1e8)), le: Math.round(num(s.le, 0, 1e4)), ln: Math.round(num(s.ln, -1, 1)), y: num(s.y, 0, 12), sl: !!s.sl, look, t: p.updatedAt || Date.now() };
+}
+function livePresence() {
+  const p = activeProfile(), playing = run && P && P.seg && ['play', 'quiz', 'paused', 'dying', 'won'].includes(state);
+  const o = { n: (p && p.name) || cfg.name || 'ADA student', mj: shortMajor(MAJORS[save.major]), yr: curYear(), c: { g: cfg.gender, sk: cfg.skin, h: cfg.hair, hc: cfg.hairColor, t: cfg.top, tc: cfg.topColor, b: cfg.bottom, bc: cfg.bottomColor, sh: cfg.shoes } };
+  if (playing) Object.assign(o, { st: state === 'dying' ? 'out' : state === 'won' ? 'won' : 'run', d: Math.round(run.dist), sc: runScore(false), le: run.learned.length, ln: P.lane, y: +P.y.toFixed(2), sl: P.slide > 0 ? 1 : 0 });
+  else if (run && run.over) Object.assign(o, { st: run.wonT > 0 ? 'won' : 'out', d: Math.round(run.dist), sc: run.recorded ? run.recorded.score : runScore(false), le: run.learned.length });
+  else Object.assign(o, { st: 'menu', d: 0, sc: 0, le: 0 });
+  return o;
+}
+function livePeerSelf() { const o = livePresence(); return peerInfo({ peer: 'me', presence: o }); }
+const Live = {
+  room: null, peers: [], sendT: 0, uiT: 0, ghosts: new Map(),
+  init() {
+    const cl = window.claude;
+    if (!cl || typeof cl.use !== 'function') return;
+    cl.use('room').then(room => {
+      if (!room) return;
+      this.room = room;
+      room.onPeers(ch => { this.peers = ch.peers.filter(p => !p.isMe && p.kind === 'viewer'); renderOnline(); if (screen === 'board' && lbTab === 'live') renderBoard(); }, () => { this.room = null; this.peers = []; renderOnline(); });
+      this.push(); renderOnline();
+    }).catch(() => {});
+  },
+  push() { if (this.room) this.room.presence(livePresence()).catch(() => {}); },
+  tick(dt) {
+    if (!this.room) return;
+    this.sendT -= dt; if (this.sendT <= 0) { this.sendT = state === 'play' ? 0.15 : 1; this.push(); }
+    this.uiT -= dt; if (this.uiT <= 0) { this.uiT = 0.3; renderLiveHud(); }
+    updateGhosts(dt);
+  },
+};
+function renderOnline() {
+  const el = $('#onlineChip');
+  if (!Live.room) { el.hidden = true; return; }
+  const all = Live.peers.map(peerInfo), running = all.filter(x => x.st === 'run').length;
+  el.hidden = false;
+  el.innerHTML = all.length ? `<span class="dot"></span><b>${all.length + 1} students online</b>${running ? ` · ${running} running now` : ''} · ${all.slice(0, 3).map(x => escapeHtml(x.name.split(' ')[0])).join(', ')}${all.length > 3 ? '…' : ''}`
+    : `<span class="dot"></span>You're online. Share the game link and classmates who open it race with you live.`;
+}
+function renderLiveHud() {
+  const runners = Live.peers.map(peerInfo).filter(x => x.st !== 'menu');
+  const el = hud.live;
+  if (!(state === 'play' || state === 'paused' || state === 'quiz') || !runners.length) { if (!el.hidden) el.hidden = true; return; }
+  const me = livePeerSelf(); me.me = true;
+  const all = [me, ...runners].sort((a, b) => b.sc - a.sc), rank = all.indexOf(me) + 1;
+  const show = all.slice(0, 4); if (!show.includes(me)) show[3] = me;
+  el.hidden = false;
+  el.innerHTML = `<div class="eyebrow"><span>Live race</span><span>${rank}/${all.length}</span></div>` + show.map(x => `<div class="r${x.me ? ' me' : ''}"><i>${all.indexOf(x) + 1}</i><span>${x.me ? 'You' : escapeHtml(x.name)}${x.st === 'out' ? ' ✗' : x.st === 'won' ? ' 🎓' : ''}</span><b>${x.sc.toLocaleString('en')}</b></div>`).join('');
+}
+// a point on the track `ds` metres ahead of (or behind) the runner, crossing segment boundaries
+function trackPos(ds, lat, y, out) {
+  let seg = P.seg, s = P.s + ds, i = segs.indexOf(seg);
+  while (s > seg.len && i + 1 < segs.length) { s -= seg.len; seg = segs[++i]; }
+  while (s < 0 && i > 0) { seg = segs[--i]; s += seg.len; }
+  return toWorld(seg, s, lat, y, out);
+}
+// classmates who are running right now appear as see-through runners on your track, placed by how far they have run
+function updateGhosts(dt) {
+  const G = Live.ghosts, want = new Set();
+  if (state === 'play' || state === 'paused' || state === 'quiz' || state === 'dying') {
+    const runners = Live.peers.map(peerInfo).filter(x => x.st === 'run').slice(0, 6);
+    for (const x of runners) {
+      let g = G.get(x.id);
+      const lookKey = JSON.stringify(x.look);
+      if (g && g.lookKey !== lookKey) { removeGhost(x.id); g = null; }
+      if (!g) {
+        const obj = buildCharacter(x.look), mats = new Map();
+        obj.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material)) { if (!mats.has(o.material)) { const m = o.material.clone(); m.transparent = true; m.opacity = 0.5; m.depthWrite = false; mats.set(o.material, m); } o.material = mats.get(o.material); } });
+        const U = obj.userData; U.shadow.visible = false; U.board.visible = false; U.jet.visible = false;
+        const tex = labelTex(x.name, '#2681ba', '#ffffff'), tag = sprite(tex, 1.9, 0.48); tag.position.y = 2.75; obj.add(tag);
+        scene.add(obj);
+        g = { obj, mats: [...mats.values()], tex, tag, lookKey, d: x.d, vd: 0, lastD: x.d, lastT: performance.now(), lat: x.ln * LANE };
+        G.set(x.id, g);
+      }
+      // smooth the 6-7 updates a second into motion: estimate speed from successive distances
+      const now = performance.now();
+      if (x.d !== g.lastD) { const v = (x.d - g.lastD) / Math.max(0.05, (now - g.lastT) / 1000); g.vd = g.vd ? g.vd * 0.6 + v * 0.4 : v; g.lastD = x.d; g.lastT = now; }
+      const est = g.lastD + clamp(g.vd, 0, 60) * Math.min(0.6, (now - g.lastT) / 1000);
+      g.d = damp(g.d, est, 8, dt); g.lat = damp(g.lat, x.ln * LANE, 12, dt);
+      const ds = g.d - run.dist;
+      if (ds < -30 || ds > 150) { g.obj.visible = false; want.add(x.id); continue; }
+      g.obj.visible = true;
+      trackPos(ds, g.lat, x.y, g.obj.position);
+      g.obj.rotation.set(0, 0, 0);
+      animChar(g.obj, x.y > 0.05 ? 'jump' : x.sl ? 'slide' : 'run', clock * (6 + Math.max(13, g.vd) * 0.44), dt, { y: x.y });
+      want.add(x.id);
+    }
+  }
+  for (const id of [...G.keys()]) if (!want.has(id)) removeGhost(id);
+}
+function removeGhost(id) {
+  const g = Live.ghosts.get(id); if (!g) return;
+  scene.remove(g.obj); g.mats.forEach(m => m.dispose()); g.tex.dispose(); g.tag.material.dispose();
+  Live.ghosts.delete(id);
+}
+
+// ---------- v6: sign-in ----------
+let lgYear = 1, lgAfter = null;
+function openLogin(after) {
+  lgAfter = after || null;
+  const p = activeProfile();
+  $('#lgName').value = p ? p.name : (cfg.name || ''); $('#lgId').value = p ? p.sid : '';
+  const sel = $('#lgMajor'); sel.innerHTML = '';
+  ['B', 'M'].forEach(l => { const og = document.createElement('optgroup'); og.label = l === 'B' ? 'Bachelor' : 'Master'; MAJORS.forEach((m, i) => { if (m.lvl !== l) return; const o = document.createElement('option'); o.value = i; o.textContent = m.en; og.appendChild(o); }); sel.appendChild(og); });
+  sel.value = p ? p.major : save.major; lgYear = curYear();
+  sel.onchange = () => { lgYear = clampN(lgYear, 1, yearsOf(MAJORS[+sel.value])); buildLgYears(); };
+  buildLgYears(); buildLgSaved(); $('#lgErr').hidden = true;
+  show('login');
+}
+function buildLgYears() {
+  const box = $('#lgYear'), Y = yearsOf(MAJORS[+$('#lgMajor').value]); box.innerHTML = '';
+  for (let y = 1; y <= Y; y++) { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.textContent = 'Year ' + y; b.setAttribute('aria-pressed', y === lgYear); b.onclick = () => { lgYear = y; buildLgYears(); }; box.appendChild(b); }
+}
+function buildLgSaved() {
+  const box = $('#lgSaved'); box.innerHTML = '';
+  const list = Object.values(save.profiles).sort((a, b) => (b.last || 0) - (a.last || 0));
+  if (!list.length) return;
+  const h = document.createElement('div'); h.className = 'eyebrow'; h.textContent = 'Students on this device'; box.appendChild(h);
+  list.slice(0, 6).forEach(p => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', profKey(p.sid) === save.active);
+    b.innerHTML = `<span class="av">${escapeHtml(initials(p.name))}</span><span><b>${escapeHtml(p.name)}</b><small>${escapeHtml(shortMajor(MAJORS[p.major] || MAJORS[0]))} · Year ${p.year}${p.bestScore ? ' · best ' + p.bestScore.toLocaleString('en') : ''}</small></span>`;
+    b.onclick = () => useProfile(profKey(p.sid));
+    box.appendChild(b);
+  });
+}
+function useProfile(key) {
+  const p = save.profiles[key]; if (!p) return;
+  save.active = key; save.major = MAJORS[p.major] ? p.major : save.major; save.year = p.year; p.last = Date.now();
+  cfg.name = p.name; if (p.cfg) cfg = Object.assign({}, DEF[p.cfg.gender] || DEF.girl, p.cfg);
+  save.cfg = save.cfg || null; persist(); rebuildPlayer(); audioInit(); SFX.ui();
+  const after = lgAfter; lgAfter = null;
+  if (after === 'play') { if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); }
+  else { show('title'); refreshTitle(); }
+}
+// a plain click handler (form submission is blocked inside the claude.ai sandbox)
+function submitLogin() {
+  const name = $('#lgName').value.trim().replace(/\s+/g, ' '), sid = $('#lgId').value.trim(), err = $('#lgErr');
+  const fail = msg => { err.textContent = msg; err.hidden = false; };
+  if (name.length < 2) return fail('Please enter your name.');
+  if (!validStudentId(sid)) return fail('Enter your student ID (4–10 digits) or your email address.');
+  const key = profKey(sid), major = +$('#lgMajor').value, old = save.profiles[key];
+  save.profiles[key] = Object.assign(old || { created: Date.now(), runs: 0, books: 0, bestScore: 0, bestDist: 0, best: {}, quizRight: 0, quizTotal: 0, wins: 0 }, { name, sid, major, year: clampN(lgYear, 1, yearsOf(MAJORS[major])) });
+  useProfile(key);
+}
+$('#lgGo').onclick = submitLogin;
+['#lgName', '#lgId'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitLogin(); } }));
+$('#lgBack').onclick = () => { lgAfter = null; show('title'); refreshTitle(); };
+
+// ---------- v6: leaderboard ----------
+let lbTab = 'all';
+function openBoard() { show('board'); Store.watch(); renderBoard(); }
+Store.listeners.push(() => { if (screen === 'board') renderBoard(); });
+function renderBoard() {
+  $('#lbAll').setAttribute('aria-pressed', lbTab === 'all'); $('#lbDev').setAttribute('aria-pressed', lbTab === 'dev'); $('#lbLive').setAttribute('aria-pressed', lbTab === 'live');
+  const me = activeProfile(), list = $('#lbList'), st = $('#lbStatus');
+  let rows, mine = null;
+  if (lbTab === 'live') {
+    if (!Live.room) { st.textContent = 'Live play works when the game is opened from its claude.ai link while signed in.'; list.innerHTML = '<div class="lb-empty">Nobody to race here yet.</div>'; return; }
+    const all = [livePeerSelf(), ...Live.peers.map(peerInfo)];
+    st.textContent = `${all.length} ${all.length === 1 ? 'student' : 'students'} online now · start a run and you race everyone who is running`;
+    rows = all.map(x => ({ name: x.name, major: x.mj, year: x.yr, score: x.sc, id: x.id, live: x.st === 'run' ? `running · ${x.d.toLocaleString('en')} m · 🧠 ${x.le}` : x.st === 'out' ? 'caught by the F' : x.st === 'won' ? 'graduated! 🎓' : 'in the menu' }));
+    rows.sort((a, b) => b.score - a.score); mine = 'me';
+  } else if (lbTab === 'all' && Store.mode === 'global') {
+    st.textContent = Store.err ? 'The shared leaderboard could not be reached right now. Your scores are still saved on this device.' : 'Everyone who plays this game link · best score per player · updates live';
+    rows = (Store.rows || []).map(r => ({ name: r.name, major: r.major, year: r.year, score: r.score, dist: r.dist, learned: r.learned, id: r.id }));
+    mine = Store.uid;
+    if (!Store.rows && !Store.err) { list.innerHTML = '<div class="lb-empty">Loading the ADA leaderboard…</div>'; return; }
+  } else {
+    if (lbTab === 'all') st.textContent = 'The shared leaderboard works when the game is opened from its claude.ai link. Showing this device for now.';
+    else st.textContent = 'Students who signed in on this device';
+    rows = Object.values(save.profiles).filter(p => p.bestScore > 0).map(p => ({ name: p.name, major: shortMajor(MAJORS[p.major] || MAJORS[0]), year: p.year, score: p.bestScore, dist: p.bestDist, learned: p.learned, id: profKey(p.sid) }));
+    rows.sort((a, b) => b.score - a.score); mine = save.active;
+  }
+  if (!rows.length) { list.innerHTML = '<div class="lb-empty">No scores yet. Finish a run to put your name on the board.</div>'; return; }
+  list.innerHTML = rows.map((r, i) => `<div class="lb-row${r.id === mine ? ' me' : ''}"><span class="rk">${i + 1}</span><span class="nm"><b>${escapeHtml(r.name || 'ADA student')}</b><small>${escapeHtml(r.major || '')}${r.year ? ' · Year ' + (+r.year) : ''}</small></span><span class="sc">${(+r.score || 0).toLocaleString('en')}<small>${r.live ? escapeHtml(r.live) : Math.round(+r.dist || 0).toLocaleString('en') + ' m · 🧠 ' + (+r.learned || 0)}</small></span></div>`).join('');
+}
+// ---------- v6.2: share the game link ----------
+const ARTIFACT_URL = 'https://claude.ai/artifact/JwpUvvjHZ9p91Q7nFebmtB';
+const shareUrl = () => { try { if (/^https?:$/.test(location.protocol) && !/claude|anthropic|usercontent/i.test(location.hostname)) return location.href.split('#')[0]; } catch (e) {} return ARTIFACT_URL; };
+let shareBack = 'title';
+function openShare(fromRun) {
+  shareBack = screen || 'title';
+  const p = activeProfile(), url = shareUrl();
+  const msg = fromRun && run && run.recorded
+    ? `I scored ${run.recorded.score.toLocaleString('en')} in ADA Run and learned ${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}. Can you beat me?`
+    : `Run across the ADA campus, answer quizzes from your major and escape the F. Race me in ADA Run!`;
+  shareText = msg + ' ' + url;
+  $('#shareMsg').textContent = msg; $('#shareUrl').value = url; $('#shareCopy').textContent = 'Copy';
+  $('#shareNative').hidden = !navigator.share;
+  show('share');
+}
+let shareText = '';
+$('#shareCopy').onclick = async () => {
+  const inp = $('#shareUrl'); let ok = false;
+  try { await navigator.clipboard.writeText(shareText); ok = true; } catch (e) {}
+  if (!ok) { try { inp.value = shareText; inp.select(); ok = document.execCommand('copy'); } catch (e) {} }
+  $('#shareCopy').textContent = ok ? 'Copied ✓' : 'Select & copy';
+  if (!ok) { inp.focus(); inp.select(); }
+};
+$('#shareNative').onclick = () => { navigator.share({ title: 'ADA Run', text: $('#shareMsg').textContent, url: $('#shareUrl').value }).catch(() => {}); };
+$('#shareClose').onclick = () => { show(shareBack === 'share' ? 'title' : shareBack); if (screen === 'title') refreshTitle(); };
+$('#toShare').onclick = () => openShare(false);
+$('#overShare').onclick = () => openShare(true); $('#wonShare').onclick = () => openShare(true);
+
+$('#lbAll').onclick = () => { lbTab = 'all'; renderBoard(); };
+$('#lbDev').onclick = () => { lbTab = 'dev'; renderBoard(); };
+$('#lbLive').onclick = () => { lbTab = 'live'; renderBoard(); };
+$('#lbBack').onclick = () => { show('title'); refreshTitle(); };
+$('#lbPlay').onclick = () => $('#playBtn').onclick();
+$('#toBoard').onclick = openBoard;
+$('#overBoard').onclick = () => toMenu('board'); $('#wonBoard').onclick = () => toMenu('board');
+
 $('#tabB').onclick = () => { mjLevel = 'B'; buildMajors(); };
 $('#tabM').onclick = () => { mjLevel = 'M'; buildMajors(); };
 
 // buttons
-$('#playBtn').onclick = () => { audioInit(); if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); };
+$('#playBtn').onclick = () => { audioInit(); if (!activeProfile()) openLogin('play'); else if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); };
 $('#toCustom').onclick = () => { show('custom'); buildCustom(); };
 $('#toMajors').onclick = () => { mjLevel = MAJORS[save.major].lvl; show('majors'); buildMajors(); };
 $('#customBack').onclick = () => { saveCfg(); show('title'); refreshTitle(); };
 $('#customNext').onclick = () => { saveCfg(); mjLevel = MAJORS[save.major].lvl; show('majors'); buildMajors(); };
 $('#majorsBack').onclick = () => { show('title'); refreshTitle(); };
-$('#majorsGo').onclick = () => { if (!save.cfg) saveCfg(); startGame(); };
+$('#majorsGo').onclick = () => { if (!save.cfg) saveCfg(); if (!activeProfile()) openLogin('play'); else startGame(); };
 $('#pauseBtn').onclick = () => state === 'paused' ? resumeGame() : pauseGame();
 $('#boardBtn').onclick = () => act('board');
 $('#resumeBtn').onclick = resumeGame;
@@ -3037,8 +3642,10 @@ resetWorld();
 P = menuP();
 resize();
 show('title'); refreshTitle(); drawLogoMark();
+if (!activeProfile()) openLogin();
+Live.init();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLogoMark);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
-window.__ada = { get state() { return state; }, get run() { return run; }, get P() { return P; }, act, startGame, segs: () => segs, addSegment, activatePower, unfair: () => unfairRows, tryTurn, cam: () => [camera.position.x, camera.position.y, camera.position.z, camLook.x, camLook.y, camLook.z, player.position.x, player.position.z].map(v => +v.toFixed(1)) };
+window.__ada = { get state() { return state; }, get run() { return run; }, get P() { return P; }, act, startGame, segs: () => segs, addSegment, activatePower, unfair: () => unfairRows, setCfg: (o, g) => { cfg = g ? Object.assign({}, DEF[g], o || {}) : Object.assign({}, cfg, o); rebuildPlayer(); }, spin: a => { menuYaw = a; }, spawnGate: () => spawnGate(), gate: () => gate, store: Store, live: Live, openBoard, openLogin, startQuiz: ci => startQuiz(ci), cam: () => [camera.position.x, camera.position.y, camera.position.z, camLook.x, camLook.y, camLook.z, player.position.x, player.position.z].map(v => +v.toFixed(1)) };
 })();
 </script></body></html>
