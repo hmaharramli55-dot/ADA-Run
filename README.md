@@ -1,5 +1,7 @@
 # ADA Run
 
+**▶ Play now: https://hmaharramli55-dot.github.io/ADA-Run/**
+
 An endless runner game in the style of Subway Surfers and Temple Run, set on the ADA University campus in Baku.
 
 You play an ADA student running across campus to escape a giant **F** (Academic Fail). Dodge the distractions that make students fail, like TikTok, Instagram, parties and missed deadlines. Collect books to earn points. Reach **100 points** to pass your degree and get your diploma.
