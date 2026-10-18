@@ -64,10 +64,10 @@ To connect a Firebase project:
 1. In the [Firebase console](https://console.firebase.google.com), create a project.
 2. Under **Authentication**, turn on **Email/Password**.
 3. Under **Realtime Database**, create a database in locked mode. In the **Rules** tab, paste the contents of [`firebase-rules.json`](firebase-rules.json), then publish.
-4. Register a web app under **Project settings > Your apps**. Copy its `apiKey` and `databaseURL` into `FIREBASE` near the top of the script in `index.html`:
+4. Register a web app under **Project settings > Your apps**, and paste its `firebaseConfig` values into `FIREBASE` near the top of the script in `index.html`. Only `apiKey` and either `databaseURL` or `projectId` are needed:
 
 ```js
-const FIREBASE = { apiKey: 'AIza...', databaseURL: 'https://ada-run-xxxxx-default-rtdb.europe-west1.firebasedatabase.app' };
+const FIREBASE = { apiKey: 'AIza...', authDomain: 'ada-run-xxxxx.firebaseapp.com', projectId: 'ada-run-xxxxx', databaseURL: 'https://ada-run-xxxxx-default-rtdb.europe-west1.firebasedatabase.app' };
 ```
 
 Until this is set, the game keeps scores on each device, and online play only works on the game's claude.ai link.
