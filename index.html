@@ -687,19 +687,27 @@ function runCourses(m, y) {
 
 // ---------- v6: scores storage: this device always, plus the shared ADA leaderboard when the page can reach it ----------
 // ---------- v6.4: accounts and shared scores through the game's own Firebase project ----------
-// paste the web app config from the Firebase console (Project settings > Your apps); a web apiKey is public by design
-const FIREBASE = { apiKey: '', databaseURL: '' };
+// paste the firebaseConfig block from the Firebase console (Project settings > Your apps) as it is; a web apiKey is public by design
+const FIREBASE = { apiKey: '', databaseURL: '', projectId: '' };
 const FB = {
-  url: String(FIREBASE.databaseURL || '').replace(/\/+$/, ''), key: String(FIREBASE.apiKey || ''), ok: false,
+  url: '', key: String(FIREBASE.apiKey || ''), ok: false,
   token: '', exp: 0, uid: '', refresh: '', onToken: null,
   async init() {
-    if (!this.key || !/^https:\/\//.test(this.url) && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(this.url)) return false;
-    try {
-      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 7000);
-      const r = await fetch(this.url + '/.json?shallow=true', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
-      // a locked database answers 401 to strangers, which still means it is there
-      this.ok = r.status < 500; return this.ok;
-    } catch (e) { return false; }
+    if (!this.key) return false;
+    // the config only carries databaseURL when the database existed before the app was registered: otherwise try its usual addresses
+    const pid = String(FIREBASE.projectId || '').trim();
+    const urls = FIREBASE.databaseURL ? [FIREBASE.databaseURL] : pid ? ['europe-west1.firebasedatabase.app', 'firebaseio.com', 'asia-southeast1.firebasedatabase.app'].map(h => h === 'firebaseio.com' ? `https://${pid}-default-rtdb.firebaseio.com` : `https://${pid}-default-rtdb.${h}`) : [];
+    for (const raw of urls) {
+      const url = String(raw).trim().replace(/\/+$/, '');
+      if (!/^https:\/\//.test(url) && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(url)) continue;
+      try {
+        const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 7000);
+        const r = await fetch(url + '/.json?shallow=true', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
+        // a locked database answers 401 to strangers, which still means it is there; a wrong address answers 404
+        if (r.status === 200 || r.status === 401) { this.url = url; this.ok = true; return true; }
+      } catch (e) {}
+    }
+    return false;
   },
   // Firebase Authentication with email + password, over REST; kind is 'signUp' or 'signInWithPassword'
   async auth(kind, email, password) {
