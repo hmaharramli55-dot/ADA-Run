@@ -49,22 +49,35 @@ Open the link above, or open `index.html` in any modern browser on a computer or
 - **Scoring.** One mode for everyone: 0.10 points per book, combos (x2, x3, x5) and pomegranate books worth 1.00. Power-ups include a hoverboard, jetpack, coffee magnet, focus mode and super-jump shoes. You get a transcript with GPA and, at 100 points, a diploma.
 - **Look.** Caspian Blue, White and Pomegranate visual identity.
 
-## Online play
+## Online play and accounts
 
-The game connects players through a [Firebase Realtime Database](https://firebase.google.com/docs/database). Put the database URL in `FIREBASE_DB` near the top of the script in `index.html`:
+Online play runs on the game's own [Firebase](https://firebase.google.com/) project. Once it is connected:
+
+- Every player creates a free account (name, student ID or ADA email, password, major and year) and can log in on any phone or computer.
+- Everyone who is logged in sees each other's best scores on the "All ADA" leaderboard.
+- Players who are running at the same time see each other on the track, with their name and live score above their head.
+
+Student IDs are never shown to anyone, and each player can only change their own scores and progress.
+
+To connect a Firebase project:
+
+1. In the [Firebase console](https://console.firebase.google.com), create a project.
+2. Under **Authentication**, turn on **Email/Password**.
+3. Under **Realtime Database**, create a database in locked mode. In the **Rules** tab, paste the contents of [`firebase-rules.json`](firebase-rules.json), then publish.
+4. Register a web app under **Project settings > Your apps**. Copy its `apiKey` and `databaseURL` into `FIREBASE` near the top of the script in `index.html`:
 
 ```js
-const FIREBASE_DB = 'https://ada-run-xxxxx-default-rtdb.europe-west1.firebasedatabase.app';
+const FIREBASE = { apiKey: 'AIza...', databaseURL: 'https://ada-run-xxxxx-default-rtdb.europe-west1.firebasedatabase.app' };
 ```
 
-With the URL empty, the GitHub Pages version keeps scores on each device, and online play works on the game's claude.ai link instead.
+Until this is set, the game keeps scores on each device, and online play only works on the game's claude.ai link.
 
 ## Built with
 
 - HTML5, CSS and JavaScript in a single file
 - [Three.js](https://threejs.org/) r128 (WebGL), loaded from a CDN
 - Web Audio API for sound effects and music
-- Firebase Realtime Database (REST and live streaming) for online play
+- Firebase Authentication and Realtime Database (REST and live streaming) for accounts and online play
 
 ## Author
 

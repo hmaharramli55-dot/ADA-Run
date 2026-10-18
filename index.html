@@ -246,6 +246,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
 .lg-note{margin:0;color:var(--muted);font-size:.85rem;line-height:1.45}
 .lg-err{margin:0;background:rgba(215,43,72,.2);border:1px solid var(--fail);border-radius:10px;padding:.5em .8em;font-size:.85rem}
 .lg-actions{display:flex;gap:10px}.lg-actions .btn.primary{flex:1}
+.lg-actions .btn.primary:disabled{opacity:.6;cursor:progress}
+.lg-tabs button{flex:1}
+.lg-link{align-self:center;color:var(--muted);text-decoration:underline;font-size:.85rem;padding:.3em}
 .lg-saved{display:flex;flex-direction:column;gap:6px}
 .lg-saved:empty{display:none}
 .lg-saved button{display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.07);border:2px solid transparent;border-radius:12px;padding:.5em .7em}
@@ -336,16 +339,19 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
 
 <section id="login" class="screen" hidden>
   <div class="lg-card" id="lgForm">
-    <div class="eyebrow">ADA Run · Student sign-in</div>
-    <h2>Who's running today?</h2>
-    <p class="lg-note">No password needed. Your profile, best scores and progress are saved in this browser.</p>
+    <div class="eyebrow" id="lgEyebrow">ADA Run · Student sign-in</div>
+    <h2 id="lgTitle">Who's running today?</h2>
+    <div class="tabs lg-tabs" id="lgTabs" role="group" aria-label="Account" hidden><button type="button" id="lgTabNew" aria-pressed="true">Create account</button><button type="button" id="lgTabIn" aria-pressed="false">Log in</button></div>
+    <p class="lg-note" id="lgNote">No password needed. Your profile, best scores and progress are saved in this browser.</p>
     <div class="lg-saved" id="lgSaved"></div>
-    <label><span class="eyebrow">Full name</span><input class="name-in" id="lgName" maxlength="28" autocomplete="name" placeholder="e.g. Aysel Mammadova"></label>
+    <label class="lg-new"><span class="eyebrow">Full name</span><input class="name-in" id="lgName" maxlength="28" autocomplete="name" placeholder="e.g. Aysel Mammadova"></label>
     <label><span class="eyebrow">Student ID or ADA email</span><input class="name-in" id="lgId" maxlength="60" autocomplete="username" placeholder="e.g. 12345 or aysel@ada.edu.az"></label>
-    <label><span class="eyebrow">Major</span><select class="name-in" id="lgMajor"></select></label>
-    <div><span class="eyebrow">Academic year</span><div class="opts" id="lgYear"></div></div>
+    <label id="lgPassWrap" hidden><span class="eyebrow">Password</span><input class="name-in" id="lgPass" type="password" maxlength="64" autocomplete="new-password" placeholder="At least 6 characters"></label>
+    <label class="lg-new"><span class="eyebrow">Major</span><select class="name-in" id="lgMajor"></select></label>
+    <div class="lg-new"><span class="eyebrow">Academic year</span><div class="opts" id="lgYear"></div></div>
     <p class="lg-err" id="lgErr" role="alert" hidden></p>
     <div class="lg-actions"><button type="button" class="btn" id="lgBack">Back</button><button type="button" class="btn primary" id="lgGo">Sign in</button></div>
+    <button type="button" class="lg-link" id="lgOut" hidden>Log out on this device</button>
   </div>
 </section>
 
@@ -435,7 +441,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline
     <h2>Share the game</h2>
     <p class="share-msg" id="shareMsg"></p>
     <div class="share-row"><input id="shareUrl" readonly aria-label="Game link"><button class="btn primary" id="shareCopy">Copy</button></div>
-    <p class="share-note" id="shareNote">Send this link in WhatsApp, Telegram or Instagram. Friends who open it while signed in to Claude can race you live and join the leaderboard.</p>
+    <p class="share-note" id="shareNote">Send this link in WhatsApp, Telegram or Instagram. Friends make a free account in the game, then everyone sees each other's scores and runners live.</p>
     <div class="actions"><button class="btn green" id="shareNative" hidden>Share…</button><button class="btn" id="shareClose">Close</button></div>
   </div>
 </section>
@@ -654,7 +660,8 @@ const DEFAULT_MAJOR = Math.max(0, MAJORS.findIndex(m => m.en === 'Bachelor of Sc
 let save = { cfg: null, major: DEFAULT_MAJOR, mode: 'sem', best: {}, muted: false };
 try { const s = JSON.parse(localStorage.getItem(SKEY)); if (s) save = Object.assign(save, s); } catch (e) {}
 if (!MAJORS[save.major]) save.major = DEFAULT_MAJOR;
-function persist() { try { localStorage.setItem(SKEY, JSON.stringify(save)); } catch (e) {} }
+let onPersist = null;
+function persist(quiet) { try { localStorage.setItem(SKEY, JSON.stringify(save)); } catch (e) {} if (!quiet && onPersist) onPersist(); }
 
 // ---------- v6: student profiles (no passwords, saved in this browser) ----------
 if (!save.profiles || typeof save.profiles !== 'object') save.profiles = {};
@@ -679,46 +686,84 @@ function runCourses(m, y) {
 }
 
 // ---------- v6: scores storage: this device always, plus the shared ADA leaderboard when the page can reach it ----------
-// ---------- v6.3: shared online database for the public link (Firebase Realtime Database, REST + live stream) ----------
-// set FIREBASE_DB to the database URL to put every player on one leaderboard and one live race
-const FIREBASE_DB = '';
+// ---------- v6.4: accounts and shared scores through the game's own Firebase project ----------
+// paste the web app config from the Firebase console (Project settings > Your apps); a web apiKey is public by design
+const FIREBASE = { apiKey: '', databaseURL: '' };
 const FB = {
-  url: String(FIREBASE_DB || '').replace(/\/+$/, ''), ok: false,
+  url: String(FIREBASE.databaseURL || '').replace(/\/+$/, ''), key: String(FIREBASE.apiKey || ''), ok: false,
+  token: '', exp: 0, uid: '', refresh: '', onToken: null,
   async init() {
-    if (!this.url || !/^https:\/\//.test(this.url) && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(this.url)) return false;
+    if (!this.key || !/^https:\/\//.test(this.url) && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(this.url)) return false;
     try {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 7000);
       const r = await fetch(this.url + '/.json?shallow=true', { cache: 'no-store', signal: ctl.signal }); clearTimeout(to);
-      this.ok = r.ok; return r.ok;
+      // a locked database answers 401 to strangers, which still means it is there
+      this.ok = r.status < 500; return this.ok;
     } catch (e) { return false; }
   },
-  req(path, method, body, keepalive) { return fetch(this.url + path + '.json', { method, body: body === undefined ? undefined : JSON.stringify(body), keepalive: !!keepalive, headers: body === undefined ? undefined : { 'Content-Type': 'application/json' } }).then(r => r.ok ? r.json() : Promise.reject(new Error('http ' + r.status))); },
+  // Firebase Authentication with email + password, over REST; kind is 'signUp' or 'signInWithPassword'
+  async auth(kind, email, password) {
+    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${kind}?key=${encodeURIComponent(this.key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, returnSecureToken: true }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(String((j.error && j.error.message) || 'AUTH_FAILED'));
+    this.setToken(j.idToken, j.refreshToken, j.localId, +j.expiresIn);
+    return j.localId;
+  },
+  setToken(id, refresh, uid, secs) { this.token = id || ''; this.refresh = refresh || ''; this.uid = uid || ''; this.exp = id ? Date.now() + (secs || 3600) * 1000 - 120e3 : 0; if (this.onToken) this.onToken(); },
+  signOut() { this.token = this.refresh = this.uid = ''; this.exp = 0; },
+  // sign-in tokens last an hour; swap the long-lived refresh token for a new one when needed
+  async fresh() {
+    if (this.token && Date.now() < this.exp) return this.token;
+    if (!this.refresh) throw new Error('NOT_SIGNED_IN');
+    if (!this.pending) this.pending = (async () => {
+      const r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(this.key)}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(this.refresh) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { const m = String((j.error && j.error.message) || 'TOKEN_EXPIRED'); if (r.status === 400) this.refresh = ''; throw new Error(m); }
+      this.setToken(j.id_token, j.refresh_token, j.user_id, +j.expires_in);
+      return this.token;
+    })().finally(() => { this.pending = null; });
+    return this.pending;
+  },
+  async req(path, method, body, keepalive) {
+    const t = keepalive && this.token ? this.token : await this.fresh();
+    const r = await fetch(this.url + path + '.json?auth=' + encodeURIComponent(t), { method, body: body === undefined ? undefined : JSON.stringify(body), keepalive: !!keepalive, headers: body === undefined ? undefined : { 'Content-Type': 'application/json' } });
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  },
   get(path) { return this.req(path, 'GET'); },
   put(path, v, keep) { return this.req(path, 'PUT', v, keep); },
   patch(path, v) { return this.req(path, 'PATCH', v); },
   del(path, keep) { return this.req(path, 'DELETE', undefined, keep); },
   // keep a live copy of one branch of the database; calls onMap with the whole branch after every change
   stream(path, onMap, onErr) {
-    let map = {};
+    let map = {}, es = null, closed = false, wait = 2000;
     const setAt = (p, data) => {
       const seg = p.split('/').filter(Boolean);
       if (!seg.length) { map = data && typeof data === 'object' ? data : {}; return; }
       let o = map; for (let i = 0; i < seg.length - 1; i++) { if (!o[seg[i]] || typeof o[seg[i]] !== 'object') o[seg[i]] = {}; o = o[seg[i]]; }
       const k = seg[seg.length - 1]; if (data === null) delete o[k]; else o[k] = data;
     };
-    const es = new EventSource(this.url + path + '.json');
-    const on = kind => e => { try { const m = JSON.parse(e.data); if (!m) return; if (kind === 'put') setAt(m.path, m.data); else for (const k in (m.data || {})) setAt(m.path.replace(/\/$/, '') + '/' + k, m.data[k]); onMap(map); } catch (err) {} };
-    es.addEventListener('put', on('put')); es.addEventListener('patch', on('patch'));
-    es.addEventListener('cancel', () => onErr && onErr('cancel'));
-    es.onerror = () => { if (es.readyState === 2 && onErr) onErr('closed'); };
-    return () => es.close();
+    const open = async () => {
+      if (closed) return;
+      let t; try { t = await this.fresh(); } catch (e) { if (onErr) onErr('auth'); setTimeout(open, wait = Math.min(wait * 2, 60000)); return; }
+      if (closed) return;
+      const src = es = new EventSource(this.url + path + '.json?auth=' + encodeURIComponent(t));
+      const on = kind => e => { try { const m = JSON.parse(e.data); if (!m) return; wait = 2000; if (kind === 'put') setAt(m.path, m.data); else for (const k in (m.data || {})) setAt(m.path.replace(/\/$/, '') + '/' + k, m.data[k]); onMap(map); } catch (err) {} };
+      src.addEventListener('put', on('put')); src.addEventListener('patch', on('patch'));
+      // the token ran out: reconnect with a fresh one
+      src.addEventListener('auth_revoked', () => { src.close(); if (es === src) open(); });
+      src.addEventListener('cancel', () => { src.close(); if (onErr) onErr('cancel'); if (es === src) setTimeout(open, wait = Math.min(wait * 2, 60000)); });
+      src.onerror = () => { if (src.readyState === 2 && es === src) setTimeout(open, wait = Math.min(wait * 2, 60000)); };
+    };
+    open();
+    return () => { closed = true; if (es) es.close(); };
   },
 };
 // an anonymous id for this player on the shared database (never the student ID)
 const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(10)), b => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
 // one id per browser for the live race (a tab shows one runner at a time)
 function devId() { if (!save.anon) { save.anon = rid(); persist(); } return save.anon; }
-function myPid() { const p = activeProfile(); if (p) { if (!p.pid) { p.pid = rid(); persist(); } return p.pid; } if (!save.anon) { save.anon = rid(); persist(); } return save.anon; }
+function myPid() { const p = activeProfile(); if (p && p.acct && p.uid) return p.uid; if (p) { if (!p.pid) { p.pid = rid(); persist(); } return p.pid; } if (!save.anon) { save.anon = rid(); persist(); } return save.anon; }
 const cleanRow = (id, r) => r && typeof r === 'object' ? { id, name: String(r.name || '').slice(0, 28), major: String(r.major || '').slice(0, 60), year: Math.max(0, Math.min(4, Math.round(+r.year || 0))), score: Math.max(0, Math.min(1e8, Math.round(+r.score || 0))), dist: Math.max(0, Math.round(+r.dist || 0)), learned: Math.max(0, Math.round(+r.learned || 0)), at: +r.at || 0 } : null;
 
 const Store = {
@@ -733,11 +778,11 @@ const Store = {
       this.mode = 'global'; this.watch(); this.emit();
     }).catch(() => {});
   },
-  useFirebase() { this.fb = true; this.mode = 'global'; this.emit(); },
-  myId() { return this.fb ? myPid() : this.uid; },
+  useNet() { this.net = true; this.mode = 'global'; this.emit(); },
+  myId() { return this.net ? myPid() : this.uid; },
   watch() {
     if (this.unsub) return;
-    if (this.fb) {
+    if (this.net) {
       this.unsub = FB.stream('/scores', map => { this.rows = Object.entries(map).map(([id, r]) => cleanRow(id, r)).filter(r => r && r.score > 0).sort((a, b) => b.score - a.score).slice(0, 100); this.err = null; this.emit(); }, e => { this.err = e; this.emit(); });
       return;
     }
@@ -746,9 +791,14 @@ const Store = {
       snap => { this.rows = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); this.err = null; this.emit(); },
       e => { this.err = (e && e.code) || 'error'; this.emit(); });
   },
-  async submit(entry) {
-    if (this.fb) {
-      try { const id = myPid(), cur = await FB.get('/scores/' + id); if (cur && (+cur.score || 0) >= entry.score) return true; await FB.put('/scores/' + id, entry); return true; }
+  // heal: also rewrite an equal score (keeps the name, major and year on the board current)
+  async submit(entry, heal) {
+    if (this.net) {
+      try {
+        const id = myPid(), cur = await FB.get('/scores/' + id), old = cur ? +cur.score || 0 : -1;
+        if (old > entry.score || (old === entry.score && !heal)) return true;
+        await FB.put('/scores/' + id, entry); return true;
+      }
       catch (e) { this.err = 'error'; return false; }
     }
     if (!this.db || !this.uid) return false;
@@ -761,8 +811,8 @@ const Store = {
   },
   emit() { this.listeners.forEach(f => f()); },
 };
-// one backend for everyone: the shared Firebase database when it is set up and reachable, otherwise the claude.ai page's own storage
-FB.init().then(ok => { if (ok) { Store.useFirebase(); Live.useFirebase(); } else { Store.init(); Live.init(); } Store.watch(); });
+// one backend for everyone: the game's Firebase project when it is set up and reachable, otherwise the claude.ai page's own storage
+let NET = null, netState = 'connecting';
 const shortMajor = m => m.en.replace(/^(Bachelor|Master) of (Science|Arts|Business Administration|Public Administration|Laws|Architecture)( in )?/, (all, lvl, what, inn) => inn ? '' : (lvl === 'Master' ? 'Master of ' : 'Bachelor of ') + what).replace(/^Bachelor in /, '') || m.en;
 
 // v6.1: one mode for everyone (0.10 per book, combos up to x5, pomegranate book 1.00), so all scores compare fairly
@@ -3349,9 +3399,11 @@ function recordBest(won) {
     p.bestScore = Math.max(p.bestScore || 0, score); p.last = Date.now();
     const known = new Set(p.learnedQs || []); run.learned.forEach(x => known.add(x.q));
     run.recorded.newLearned = known.size - (p.learnedQs || []).length;
-    p.learnedQs = [...known].slice(-2000); p.learned = known.size;
+    p.learnedQs = [...known].slice(-2000); p.learned = (p.learned || 0) + run.recorded.newLearned;
     run.recorded.bestScore = p.bestScore;
-    Store.submit({ name: p.name, major: shortMajor(MAJORS[p.major] || run.major), year: p.year, score: p.bestScore, dist: p.bestDist, books: p.books, learned: p.learned || 0, at: Date.now() });
+    // online, only account holders post scores; their progress follows them to any device
+    if (!NET || p.acct) Store.submit(scoreEntry(p));
+    if (p.acct) pushAccount(p);
   }
   persist();
   return isBest;
@@ -3408,11 +3460,12 @@ function renderTop() {
 Store.listeners.push(() => { if (screen === 'title') renderTop(); });
 function refreshTitle() {
   const m = MAJORS[save.major], p = activeProfile(), chip = $('#profileChip');
-  if (p) {
+  if (p && !needAccount()) {
     chip.innerHTML = `<div class="av">${escapeHtml(initials(p.name))}</div><div class="who"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(shortMajor(m))} · Year ${curYear()}${p.bestScore ? ' · best score ' + p.bestScore.toLocaleString('en') : ''}${p.learned ? ' · 🧠 ' + p.learned + ' learned' : ''}</small></div><button id="switchBtn">Switch</button>`;
     $('#switchBtn').onclick = () => openLogin();
   } else {
-    chip.innerHTML = `<div class="av">?</div><div class="who"><b>Not signed in</b><small>Sign in to save your progress and join the leaderboard</small></div><button id="switchBtn">Sign in</button>`;
+    chip.innerHTML = NET ? `<div class="av">?</div><div class="who"><b>Not logged in</b><small>Create a free account or log in to play and see everyone's scores</small></div><button id="switchBtn">Log in</button>`
+      : `<div class="av">?</div><div class="who"><b>Not signed in</b><small>Sign in to save your progress and join the leaderboard</small></div><button id="switchBtn">Sign in</button>`;
     $('#switchBtn').onclick = () => openLogin();
   }
   renderTop();
@@ -3487,26 +3540,24 @@ function livePresence() {
 }
 function livePeerSelf() { const o = livePresence(); return peerInfo({ peer: 'me', presence: o }); }
 const Live = {
-  room: null, fb: false, on: false, peers: [], sendT: 0, nextSend: 0, uiT: 0, fullT: 0, ghosts: new Map(), seen: {}, lastT: {}, map: {}, lastSt: '',
-  // Firebase: everyone writes their own /live/<id> about once a second; entries that stop updating drop out
-  useFirebase() {
-    this.fb = true; this.on = true;
+  room: null, net: false, on: false, peers: [], sendT: 0, nextSend: 0, uiT: 0, fullT: 0, ghosts: new Map(), seen: {}, lastT: {}, map: {}, lastSt: '',
+  // Firebase: every signed-in player writes their own /live/<uid> about once a second; entries that stop updating drop out
+  useNet() {
+    this.net = true; this.on = true;
     FB.stream('/live', map => {
-      const now = Date.now(), me = devId(), first = !this.loaded; this.loaded = true;
+      const now = Date.now(), me = liveId(), first = !this.loaded; this.loaded = true;
       for (const id in map) {
         const v = map[id]; if (!v || typeof v !== 'object' || id === me) continue;
         // the stream hands over the same object each time, so remember each player's last timestamp separately
         if (this.lastT[id] !== v.t) { this.lastT[id] = v.t; this.seen[id] = first ? (Math.abs(now - (+v.t || 0)) < 20000 ? now : 0) : now; }
       }
       this.map = map; this.refresh();
-      // tidy entries left behind by closed tabs (over an hour old)
-      if (first) Object.entries(map).filter(([id, v]) => !v || now - (+v.t || 0) > 3600e3).slice(0, 20).forEach(([id]) => FB.del('/live/' + id).catch(() => {}));
     }, () => {});
-    addEventListener('pagehide', () => { FB.del('/live/' + devId(), true).catch(() => {}); });
+    addEventListener('pagehide', () => { if (FB.uid) FB.del('/live/' + FB.uid, true).catch(() => {}); });
     this.push(true); renderOnline();
   },
   refresh() {
-    const now = Date.now(), me = devId();
+    const now = Date.now(), me = liveId();
     const peers = Object.entries(this.map).filter(([id, v]) => id !== me && v && typeof v === 'object' && now - (this.seen[id] || 0) < 12000).map(([id, v]) => ({ peer: id, by: null, isMe: false, sameTab: false, kind: 'viewer', guest: false, presence: v, updatedAt: this.seen[id] }));
     const key = peers.map(p => p.peer + ':' + p.presence.st + ':' + p.presence.sc).join('|');
     this.peers = peers;
@@ -3524,21 +3575,23 @@ const Live = {
   },
   push(full) {
     if (this.room) { this.room.presence(livePresence()).catch(() => {}); return; }
-    if (!this.fb) return;
+    if (!this.net || !FB.uid) return;
     const o = livePresence(); o.t = Date.now();
     // the full record now and then (or when the state changes), only the moving fields in between
-    if (full || o.st !== this.lastSt || o.n !== this.lastN || Date.now() - this.fullT > 10000) { this.fullT = Date.now(); this.lastSt = o.st; this.lastN = o.n; FB.put('/live/' + devId(), o).catch(() => {}); }
-    else FB.patch('/live/' + devId(), { st: o.st, d: o.d, sc: o.sc, le: o.le, ln: o.ln, y: o.y, sl: o.sl, t: o.t }).catch(() => {});
+    if (full || o.st !== this.lastSt || o.n !== this.lastN || Date.now() - this.fullT > 10000) { this.fullT = Date.now(); this.lastSt = o.st; this.lastN = o.n; FB.put('/live/' + FB.uid, o).catch(() => {}); }
+    else FB.patch('/live/' + FB.uid, { st: o.st, d: o.d, sc: o.sc, le: o.le, ln: o.ln, y: o.y, sl: o.sl, t: o.t }).catch(() => {});
   },
   tick(dt) {
     if (!this.on) return;
     // paced by the wall clock, so slow devices still report on time
     const nowMs = performance.now();
-    if (nowMs >= this.nextSend) { this.nextSend = nowMs + 1000 * (this.room ? (state === 'play' ? 0.15 : 1) : (state === 'play' ? 0.8 : 5)); this.push(); if (this.fb) this.refresh(); }
+    if (nowMs >= this.nextSend) { this.nextSend = nowMs + 1000 * (this.room ? (state === 'play' ? 0.15 : 1) : (state === 'play' ? 0.8 : 5)); this.push(); if (this.net) this.refresh(); }
     this.uiT -= dt; if (this.uiT <= 0) { this.uiT = 0.3; renderLiveHud(); }
     updateGhosts(dt);
   },
 };
+// on the shared database a player's live entry is keyed by their account
+const liveId = () => FB.uid || devId();
 function renderOnline() {
   const el = $('#onlineChip');
   if (!Live.on) { el.hidden = true; return; }
@@ -3606,18 +3659,95 @@ function removeGhost(id) {
   Live.ghosts.delete(id);
 }
 
-// ---------- v6: sign-in ----------
-let lgYear = 1, lgAfter = null;
+// ---------- v6: sign-in · v6.4: when the game is online, every player has an account with a password ----------
+let lgYear = 1, lgAfter = null, lgMode = 'new', lgBusy = false;
+const PROG = ['runs', 'books', 'bestScore', 'bestDist', 'quizRight', 'quizTotal', 'wins', 'learned'];
+const newProfile = () => ({ created: Date.now(), runs: 0, books: 0, bestScore: 0, bestDist: 0, best: {}, quizRight: 0, quizTotal: 0, wins: 0 });
+// Firebase accounts sign in with an email: a student ID becomes a private sign-in address that is never shown to anyone
+const acctEmail = sid => /@/.test(sid) ? profKey(sid) : profKey(sid) + '@students.adarun.game';
+function needAccount() { const p = activeProfile(); return !p || (!!NET && !(p.acct && p.rt)); }
+function scoreEntry(p) { return { name: p.name, major: shortMajor(MAJORS[p.major] || MAJORS[save.major]), year: p.year, score: p.bestScore || 0, dist: p.bestDist || 0, books: p.books || 0, learned: p.learned || 0, at: Date.now() }; }
+// the account's progress lives at /users/<uid>, readable only by its owner
+function pushAccount(p) {
+  if (!NET || !p || !p.acct || !p.uid) return Promise.resolve(false);
+  const prog = { best: p.best || {} }; PROG.forEach(k => { prog[k] = +p[k] || 0; });
+  p.syncT = Date.now(); persist(true);
+  return FB.put('/users/' + p.uid, { name: p.name, major: p.major, year: p.year, cfg: p.cfg || null, prog, upd: p.syncT }).then(() => true, () => false);
+}
+// combine the account's saved progress with this device's copy, so no best score or learned topic is lost
+function mergeAccount(p, rec) {
+  const pr = (rec && rec.prog) || {};
+  PROG.forEach(k => { p[k] = Math.max(+p[k] || 0, +pr[k] || 0); });
+  p.best = p.best || {}; for (const m in (pr.best || {})) p.best[m] = Math.max(+p.best[m] || 0, +pr.best[m] || 0);
+  if (rec && (+rec.upd || 0) > (+p.syncT || 0)) {
+    if (rec.name) p.name = String(rec.name).slice(0, 28);
+    if (MAJORS[rec.major]) p.major = +rec.major;
+    p.year = clampN(Math.round(+rec.year || p.year || 1), 1, yearsOf(MAJORS[p.major] || MAJORS[0]));
+    if (rec.cfg && typeof rec.cfg === 'object' && DEF[rec.cfg.gender]) p.cfg = Object.assign({}, DEF[rec.cfg.gender], rec.cfg);
+  }
+}
+async function syncAccount(p) {
+  try { mergeAccount(p, await FB.get('/users/' + p.uid)); }
+  catch (e) { if (!FB.refresh) { p.rt = ''; persist(true); } return false; }
+  await pushAccount(p);
+  if (p.bestScore > 0) Store.submit(scoreEntry(p), true);
+  return true;
+}
+// apply a synced profile to the game (major, year and look), outside of a run
+function adopt(p) {
+  if (save.profiles[save.active] !== p) return;
+  save.major = MAJORS[p.major] ? p.major : save.major; save.year = p.year; cfg.name = p.name;
+  if (p.cfg) { cfg = Object.assign({}, DEF[p.cfg.gender] || DEF.girl, p.cfg); save.cfg = cfg; }
+  persist(true); if (state === 'menu') rebuildPlayer();
+}
+let netOn = false, pushT = 0;
+function startNet() { if (netOn || !NET || !FB.refresh) return; netOn = true; Store.useNet(); Store.watch(); Live.useNet(); }
+async function bootNet() {
+  NET = (await FB.init()) ? FB : null;
+  netState = NET ? 'online' : 'offline';
+  if (!NET) { Store.init(); Live.init(); Store.watch(); }
+  else {
+    FB.onToken = () => { const p = activeProfile(); if (p && p.acct && FB.uid === p.uid && FB.refresh && p.rt !== FB.refresh) { p.rt = FB.refresh; persist(true); } };
+    onPersist = () => { const p = activeProfile(); if (p && p.acct && p.rt) { clearTimeout(pushT); pushT = setTimeout(() => pushAccount(p), 3000); } };
+    const p = activeProfile();
+    if (p && p.acct && p.rt) {
+      FB.setToken('', p.rt, p.uid, 0); startNet();
+      syncAccount(p).then(ok => { if (ok && state === 'menu') adopt(p); if (screen === 'title') { refreshTitle(); if (needAccount()) openLogin(); } });
+    }
+  }
+  if (screen === 'login') renderLoginMode();
+  if (screen === 'title') { refreshTitle(); if (needAccount()) openLogin(); }
+}
 function openLogin(after) {
   lgAfter = after || null;
   const p = activeProfile();
-  $('#lgName').value = p ? p.name : (cfg.name || ''); $('#lgId').value = p ? p.sid : '';
+  $('#lgName').value = p ? p.name : (cfg.name || ''); $('#lgId').value = p ? p.sid : ''; $('#lgPass').value = '';
   const sel = $('#lgMajor'); sel.innerHTML = '';
   ['B', 'M'].forEach(l => { const og = document.createElement('optgroup'); og.label = l === 'B' ? 'Bachelor' : 'Master'; MAJORS.forEach((m, i) => { if (m.lvl !== l) return; const o = document.createElement('option'); o.value = i; o.textContent = m.en; og.appendChild(o); }); sel.appendChild(og); });
   sel.value = p ? p.major : save.major; lgYear = curYear();
   sel.onchange = () => { lgYear = clampN(lgYear, 1, yearsOf(MAJORS[+sel.value])); buildLgYears(); };
-  buildLgYears(); buildLgSaved(); $('#lgErr').hidden = true;
+  // returning players log in; a profile from before accounts existed gets a password added
+  lgMode = Object.values(save.profiles).some(q => q.acct) && !(p && !p.acct) ? 'in' : 'new';
+  buildLgYears(); $('#lgErr').hidden = true;
+  renderLoginMode();
   show('login');
+}
+function renderLoginMode() {
+  const online = !!NET, connecting = netState === 'connecting', isIn = online && lgMode === 'in', p = activeProfile();
+  $('#lgTabs').hidden = !online; $('#lgPassWrap').hidden = !online;
+  document.querySelectorAll('#lgForm .lg-new').forEach(el => { el.hidden = isIn; });
+  $('#lgTabNew').setAttribute('aria-pressed', !isIn); $('#lgTabIn').setAttribute('aria-pressed', isIn);
+  $('#lgEyebrow').textContent = connecting ? 'ADA Run' : online ? 'ADA Run · Student account' : 'ADA Run · Student sign-in';
+  $('#lgTitle').textContent = connecting ? 'Welcome to ADA Run' : !online ? "Who's running today?" : isIn ? 'Welcome back' : 'Create your account';
+  $('#lgNote').textContent = connecting ? 'Connecting to the ADA Run server…'
+    : !online ? 'No password needed. Your profile, best scores and progress are saved in this browser.'
+    : isIn ? 'Log in with your student ID or email and your password. Your scores and progress follow you to any phone or computer.'
+    : "Make a free account to play. Everyone with an account sees each other's scores and live runners. Your student ID stays private. Please don't reuse your ADA password.";
+  $('#lgPass').autocomplete = isIn ? 'current-password' : 'new-password'; $('#lgPass').placeholder = isIn ? 'Your password' : 'At least 6 characters';
+  const go = $('#lgGo'); go.disabled = connecting || lgBusy;
+  if (!lgBusy) go.textContent = connecting ? 'Connecting…' : !online ? 'Sign in' : isIn ? 'Log in' : 'Create account';
+  $('#lgOut').hidden = !(online && p && p.acct && p.rt);
+  buildLgSaved();
 }
 function buildLgYears() {
   const box = $('#lgYear'), Y = yearsOf(MAJORS[+$('#lgMajor').value]); box.innerHTML = '';
@@ -3625,37 +3755,91 @@ function buildLgYears() {
 }
 function buildLgSaved() {
   const box = $('#lgSaved'); box.innerHTML = '';
-  const list = Object.values(save.profiles).sort((a, b) => (b.last || 0) - (a.last || 0));
+  const online = !!NET, list = Object.values(save.profiles).sort((a, b) => (b.last || 0) - (a.last || 0));
   if (!list.length) return;
-  const h = document.createElement('div'); h.className = 'eyebrow'; h.textContent = 'Students on this device'; box.appendChild(h);
+  const h = document.createElement('div'); h.className = 'eyebrow'; h.textContent = online ? 'On this device' : 'Students on this device'; box.appendChild(h);
   list.slice(0, 6).forEach(p => {
-    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', profKey(p.sid) === save.active);
-    b.innerHTML = `<span class="av">${escapeHtml(initials(p.name))}</span><span><b>${escapeHtml(p.name)}</b><small>${escapeHtml(shortMajor(MAJORS[p.major] || MAJORS[0]))} · Year ${p.year}${p.bestScore ? ' · best ' + p.bestScore.toLocaleString('en') : ''}</small></span>`;
-    b.onclick = () => useProfile(profKey(p.sid));
+    const key = profKey(p.sid), ready = !online || !!(p.acct && p.rt);
+    const sub = !online ? '' : ready ? 'tap to play' : p.acct ? 'logged out · tap to log in' : 'no account yet · tap to add a password';
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', key === save.active && ready);
+    b.innerHTML = `<span class="av">${escapeHtml(initials(p.name))}</span><span><b>${escapeHtml(p.name)}</b><small>${escapeHtml(shortMajor(MAJORS[p.major] || MAJORS[0]))} · Year ${p.year}${p.bestScore ? ' · best ' + p.bestScore.toLocaleString('en') : ''}${sub ? ' · ' + sub : ''}</small></span>`;
+    b.onclick = () => {
+      if (ready) { useProfile(key); return; }
+      lgMode = p.acct ? 'in' : 'new';
+      $('#lgId').value = p.sid; $('#lgName').value = p.name; $('#lgMajor').value = p.major; lgYear = p.year; buildLgYears();
+      $('#lgErr').hidden = true; $('#lgPass').value = ''; renderLoginMode(); $('#lgPass').focus();
+    };
     box.appendChild(b);
   });
 }
 function useProfile(key) {
   const p = save.profiles[key]; if (!p) return;
+  if (NET && p.acct && p.rt) {
+    if (FB.uid && FB.uid !== p.uid) FB.del('/live/' + FB.uid, true).catch(() => {});
+    if (FB.uid !== p.uid) FB.setToken('', p.rt, p.uid, 0);
+    startNet();
+  }
   save.active = key; save.major = MAJORS[p.major] ? p.major : save.major; save.year = p.year; p.last = Date.now();
   cfg.name = p.name; if (p.cfg) cfg = Object.assign({}, DEF[p.cfg.gender] || DEF.girl, p.cfg);
-  save.cfg = save.cfg || null; persist(); rebuildPlayer(); audioInit(); SFX.ui();
+  save.cfg = p.cfg ? cfg : (save.cfg || null); persist(); rebuildPlayer(); audioInit(); SFX.ui();
+  if (NET && Live.net) Live.push(true);
   const after = lgAfter; lgAfter = null;
   if (after === 'play') { if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); }
   else { show('title'); refreshTitle(); }
 }
+const AUTH_MSG = {
+  EMAIL_EXISTS: 'This student ID or email already has an account. Choose Log in and enter your password.',
+  EMAIL_NOT_FOUND: 'Wrong student ID or password.', INVALID_PASSWORD: 'Wrong student ID or password.', INVALID_LOGIN_CREDENTIALS: 'Wrong student ID or password.',
+  USER_DISABLED: 'This account has been switched off.',
+  TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many tries. Wait a minute and try again.',
+  INVALID_EMAIL: 'Enter your student ID (4–10 digits) or a valid email address.',
+  OPERATION_NOT_ALLOWED: "Accounts are not switched on in the game's Firebase project yet (Authentication > Email/Password).",
+  CONFIGURATION_NOT_FOUND: "Accounts are not switched on in the game's Firebase project yet (Authentication > Get started).",
+};
+function authMsg(e) {
+  const m = String((e && e.message) || ''), k = m.split(/[ :]/)[0];
+  if (AUTH_MSG[k]) return AUTH_MSG[k];
+  if (/WEAK_PASSWORD/.test(m)) return 'Your password needs at least 6 characters.';
+  if (/fetch|network|load failed/i.test(m)) return 'Could not reach the game server. Check your internet and try again.';
+  return 'Something went wrong (' + m.slice(0, 60) + '). Please try again.';
+}
 // a plain click handler (form submission is blocked inside the claude.ai sandbox)
-function submitLogin() {
+async function submitLogin() {
+  if (lgBusy || netState === 'connecting') return;
   const name = $('#lgName').value.trim().replace(/\s+/g, ' '), sid = $('#lgId').value.trim(), err = $('#lgErr');
   const fail = msg => { err.textContent = msg; err.hidden = false; };
-  if (name.length < 2) return fail('Please enter your name.');
+  err.hidden = true;
+  const isIn = !!NET && lgMode === 'in';
+  if (!isIn && name.length < 2) return fail('Please enter your name.');
   if (!validStudentId(sid)) return fail('Enter your student ID (4–10 digits) or your email address.');
-  const key = profKey(sid), major = +$('#lgMajor').value, old = save.profiles[key];
-  save.profiles[key] = Object.assign(old || { created: Date.now(), runs: 0, books: 0, bestScore: 0, bestDist: 0, best: {}, quizRight: 0, quizTotal: 0, wins: 0 }, { name, sid, major, year: clampN(lgYear, 1, yearsOf(MAJORS[major])) });
-  useProfile(key);
+  const key = profKey(sid), major = +$('#lgMajor').value, year = clampN(lgYear, 1, yearsOf(MAJORS[major]));
+  if (!NET) {
+    save.profiles[key] = Object.assign(save.profiles[key] || newProfile(), { name, sid, major, year });
+    useProfile(key); return;
+  }
+  const pass = $('#lgPass').value;
+  if (pass.length < 6) return fail('Your password needs at least 6 characters.');
+  lgBusy = true; const go = $('#lgGo'); go.disabled = true; go.textContent = isIn ? 'Logging in…' : 'Creating account…';
+  try {
+    const uid = await FB.auth(isIn ? 'signInWithPassword' : 'signUp', acctEmail(sid), pass);
+    const p = save.profiles[key] = Object.assign(save.profiles[key] || newProfile(), { sid, acct: true, uid, rt: FB.refresh });
+    // a new account takes the form's details; logging in takes the account's saved name, major and look
+    if (isIn) p.syncT = 0; else { p.name = name; p.major = major; p.year = year; p.syncT = Date.now(); }
+    save.active = key; startNet();
+    await syncAccount(p);
+    lgBusy = false; useProfile(key);
+  } catch (e) { lgBusy = false; renderLoginMode(); fail(authMsg(e)); }
 }
 $('#lgGo').onclick = submitLogin;
-['#lgName', '#lgId'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitLogin(); } }));
+['#lgName', '#lgId', '#lgPass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitLogin(); } }));
+$('#lgTabNew').onclick = () => { lgMode = 'new'; $('#lgErr').hidden = true; renderLoginMode(); };
+$('#lgTabIn').onclick = () => { lgMode = 'in'; $('#lgErr').hidden = true; renderLoginMode(); };
+$('#lgOut').onclick = () => {
+  const p = activeProfile(); if (p) p.rt = '';
+  save.active = null; persist(true);
+  const bye = FB.uid ? FB.del('/live/' + FB.uid).catch(() => {}) : Promise.resolve();
+  bye.finally(() => { FB.signOut(); location.reload(); });
+};
 $('#lgBack').onclick = () => { lgAfter = null; show('title'); refreshTitle(); };
 
 // ---------- v6: leaderboard ----------
@@ -3667,7 +3851,7 @@ function renderBoard() {
   const me = activeProfile(), list = $('#lbList'), st = $('#lbStatus');
   let rows, mine = null;
   if (lbTab === 'live') {
-    if (!Live.on) { st.textContent = 'Live play needs the shared online database. Your scores are still saved on this device.'; list.innerHTML = '<div class="lb-empty">Nobody to race here yet.</div>'; return; }
+    if (!Live.on) { st.textContent = NET ? 'Log in to see who is playing right now.' : 'Live play needs the shared online database. Your scores are still saved on this device.'; list.innerHTML = '<div class="lb-empty">Nobody to race here yet.</div>'; return; }
     const all = [livePeerSelf(), ...Live.peers.map(peerInfo)];
     st.textContent = `${all.length} ${all.length === 1 ? 'student' : 'students'} online now · start a run and you race everyone who is running`;
     rows = all.map(x => ({ name: x.name, major: x.mj, year: x.yr, score: x.sc, id: x.id, live: x.st === 'run' ? `running · ${x.d.toLocaleString('en')} m · 🧠 ${x.le}` : x.st === 'out' ? 'caught by the F' : x.st === 'won' ? 'graduated! 🎓' : 'in the menu' }));
@@ -3678,7 +3862,7 @@ function renderBoard() {
     mine = Store.myId();
     if (!Store.rows && !Store.err) { list.innerHTML = '<div class="lb-empty">Loading the ADA leaderboard…</div>'; return; }
   } else {
-    if (lbTab === 'all') st.textContent = 'The shared leaderboard is not connected on this copy of the game. Showing this device for now.';
+    if (lbTab === 'all') st.textContent = NET ? 'Log in to see everyone\'s scores. Showing this device for now.' : 'The shared leaderboard is not connected on this copy of the game. Showing this device for now.';
     else st.textContent = 'Students who signed in on this device';
     rows = Object.values(save.profiles).filter(p => p.bestScore > 0).map(p => ({ name: p.name, major: shortMajor(MAJORS[p.major] || MAJORS[0]), year: p.year, score: p.bestScore, dist: p.bestDist, learned: p.learned, id: profKey(p.sid) }));
     rows.sort((a, b) => b.score - a.score); mine = save.active;
@@ -3687,15 +3871,15 @@ function renderBoard() {
   list.innerHTML = rows.map((r, i) => `<div class="lb-row${r.id === mine ? ' me' : ''}"><span class="rk">${i + 1}</span><span class="nm"><b>${escapeHtml(r.name || 'ADA student')}</b><small>${escapeHtml(r.major || '')}${r.year ? ' · Year ' + (+r.year) : ''}</small></span><span class="sc">${(+r.score || 0).toLocaleString('en')}<small>${r.live ? escapeHtml(r.live) : Math.round(+r.dist || 0).toLocaleString('en') + ' m · 🧠 ' + (+r.learned || 0)}</small></span></div>`).join('');
 }
 // ---------- v6.2: share the game link ----------
-const ARTIFACT_URL = 'https://claude.ai/artifact/JwpUvvjHZ9p91Q7nFebmtB';
-const shareUrl = () => { try { if (/^https?:$/.test(location.protocol) && !/claude|anthropic|usercontent/i.test(location.hostname)) return location.href.split('#')[0]; } catch (e) {} return ARTIFACT_URL; };
+const GAME_URL = 'https://hmaharramli55-dot.github.io/ADA-Run/';
+const shareUrl = () => { try { if (/^https?:$/.test(location.protocol) && !/claude|anthropic|usercontent/i.test(location.hostname)) return location.href.split('#')[0]; } catch (e) {} return GAME_URL; };
 let shareBack = 'title';
 function openShare(fromRun) {
   shareBack = screen || 'title';
   const p = activeProfile(), url = shareUrl();
   const msg = fromRun && run && run.recorded
-    ? `I scored ${run.recorded.score.toLocaleString('en')} in ADA Run and learned ${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}. Can you beat me?`
-    : `Run across the ADA campus, answer quizzes from your major and escape the F. Race me in ADA Run!`;
+    ? `I scored ${run.recorded.score.toLocaleString('en')} in ADA Run and learned ${run.learned.length} ${run.learned.length === 1 ? 'topic' : 'topics'}. Make a free account and try to beat me!`
+    : `Run across the ADA campus, answer quizzes from your major and escape the F. Make a free account and race me in ADA Run!`;
   shareText = msg + ' ' + url;
   $('#shareMsg').textContent = msg; $('#shareUrl').value = url; $('#shareCopy').textContent = 'Copy';
   $('#shareNative').hidden = !navigator.share;
@@ -3726,13 +3910,13 @@ $('#tabB').onclick = () => { mjLevel = 'B'; buildMajors(); };
 $('#tabM').onclick = () => { mjLevel = 'M'; buildMajors(); };
 
 // buttons
-$('#playBtn').onclick = () => { audioInit(); if (!activeProfile()) openLogin('play'); else if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); };
+$('#playBtn').onclick = () => { audioInit(); if (needAccount()) openLogin('play'); else if (!save.cfg) { show('custom'); buildCustom(); } else startGame(); };
 $('#toCustom').onclick = () => { show('custom'); buildCustom(); };
 $('#toMajors').onclick = () => { mjLevel = MAJORS[save.major].lvl; show('majors'); buildMajors(); };
 $('#customBack').onclick = () => { saveCfg(); show('title'); refreshTitle(); };
 $('#customNext').onclick = () => { saveCfg(); mjLevel = MAJORS[save.major].lvl; show('majors'); buildMajors(); };
 $('#majorsBack').onclick = () => { show('title'); refreshTitle(); };
-$('#majorsGo').onclick = () => { if (!save.cfg) saveCfg(); if (!activeProfile()) openLogin('play'); else startGame(); };
+$('#majorsGo').onclick = () => { if (!save.cfg) saveCfg(); if (needAccount()) openLogin('play'); else startGame(); };
 $('#pauseBtn').onclick = () => state === 'paused' ? resumeGame() : pauseGame();
 $('#boardBtn').onclick = () => act('board');
 $('#resumeBtn').onclick = resumeGame;
@@ -3753,9 +3937,10 @@ resetWorld();
 P = menuP();
 resize();
 show('title'); refreshTitle(); drawLogoMark();
-if (!activeProfile()) openLogin();
+if (needAccount()) openLogin();
+bootNet();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLogoMark);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
-window.__ada = { get state() { return state; }, get run() { return run; }, get P() { return P; }, act, startGame, segs: () => segs, addSegment, activatePower, unfair: () => unfairRows, setCfg: (o, g) => { cfg = g ? Object.assign({}, DEF[g], o || {}) : Object.assign({}, cfg, o); rebuildPlayer(); }, spin: a => { menuYaw = a; }, spawnGate: () => spawnGate(), gate: () => gate, store: Store, live: Live, openBoard, openLogin, startQuiz: ci => startQuiz(ci), cam: () => [camera.position.x, camera.position.y, camera.position.z, camLook.x, camLook.y, camLook.z, player.position.x, player.position.z].map(v => +v.toFixed(1)) };
+window.__ada = { fb: FB, get state() { return state; }, get run() { return run; }, get P() { return P; }, act, startGame, segs: () => segs, addSegment, activatePower, unfair: () => unfairRows, setCfg: (o, g) => { cfg = g ? Object.assign({}, DEF[g], o || {}) : Object.assign({}, cfg, o); rebuildPlayer(); }, spin: a => { menuYaw = a; }, spawnGate: () => spawnGate(), gate: () => gate, store: Store, live: Live, openBoard, openLogin, startQuiz: ci => startQuiz(ci), cam: () => [camera.position.x, camera.position.y, camera.position.z, camLook.x, camLook.y, camLook.z, player.position.x, player.position.z].map(v => +v.toFixed(1)) };
 })();
 </script></body></html>
