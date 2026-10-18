@@ -49,6 +49,20 @@ Open the link above, or open `index.html` in any modern browser on a computer or
 - **Scoring.** One mode for everyone: 0.10 points per book, combos (x2, x3, x5) and pomegranate books worth 1.00. Power-ups include a hoverboard, jetpack, coffee magnet, focus mode and super-jump shoes. You get a transcript with GPA and, at 100 points, a diploma.
 - **Look.** Caspian Blue, White and Pomegranate visual identity.
 
+## Graphics
+
+Version 7 reworks how the game looks, with the same gameplay and controls:
+
+- **Light and shadows.** A warm afternoon sun casts real soft shadows from the runner, the F, obstacles, trees, lamps and buildings. Soft ambient occlusion darkens the ground where buildings, trees and benches stand.
+- **Colour grading.** Bright areas roll off gently instead of burning out to white, with a little more contrast, cool shadows and warm highlights.
+- **Sky and distance.** A sky dome with a hazy horizon, painted clouds, and the Baku skyline on the horizon with the TV tower and the three Flame Towers straight down the boulevard. Distant campus fades into soft haze.
+- **Materials.** The runner, the F, books, power-ups and obstacles use physically based materials that pick up light from the sky. The F is a single bevelled letter, books have covers, spines and page edges, and trees have faceted low-poly crowns. The paving and lawn have new high-resolution textures.
+- **Effects.** Footstep dust, landing dust rings, sparks and dust when sliding, smoke on crashes, a smoke trail from the jetpack and a dark trail behind the F.
+- **Animation.** Shoulders counter-rotate against the hips, the body sways and leans forward more as the pace picks up, elbows pump and the head stays steady.
+- **Menus and HUD.** Frosted-glass panels, softer buttons, glowing progress bars, a light vignette and smooth screen transitions.
+
+The game picks a quality level for your device and steps down by itself if the frame rate drops. To choose one yourself, add `?gfx=2` (full shadows), `?gfx=1` (phone level) or `?gfx=0` (no shadows, fastest) to the link, for example https://hmaharramli55-dot.github.io/ADA-Run/?gfx=2.
+
 ## Online play and accounts
 
 Online play runs on the game's own [Firebase](https://firebase.google.com/) project. Once it is connected:
